@@ -6,7 +6,7 @@ Guidelines for AI coding agents and contributors working on Griductive-Solver (C
 
 Goal: Build a no-guess Griductive puzzle game and deductive solver using propositional logic, automatic CNF encoding, and a custom DPLL SAT solver.
 
-Tech Stack: Python 3.11+, GUI three.js, all code inside `src/`
+Tech Stack: Python 3.11+, GUI three.js, backend FastAPI, all code inside `src/`
 
 Documentation: Full Vietnamese specification and team task breakdown live in docs/Project 2 - Griductive Solver (Bản Việt hóa).md.
 
@@ -15,7 +15,7 @@ Documentation: Full Vietnamese specification and team task breakdown live in doc
 Griductive-Solver/
 ├── docs/
 │   └── Project 2 - Griductive Solver (Bản Việt hóa).md
-├── Source/
+├── src/
 │   ├── main.py              # GUI entry point
 │   ├── models.py            # Shared schemas & resolve_region()
 │   ├── game_engine.py       # GameEngine & Direct Semantic Evaluator
@@ -82,6 +82,6 @@ Use Python 3.11+ type annotations (dataclass, Literal, list[str], dict[str, ...]
 
 When modifying any schema in models.py, immediately check and update all consumers (game_engine.py, encoder.py, dpll.py, agent.py, main.py, tests/).
 
-Keep all tests passing (uv run pytest) before pushing to main or merging pull requests.
+Keep all tests passing before pushing to main or merging pull requests.
 
 Do not commit .venv/, __pycache__/, or temporary CSV/plot artifacts unless explicitly needed for docs/ or Report.pdf.
