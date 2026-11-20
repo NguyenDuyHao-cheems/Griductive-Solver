@@ -8,6 +8,7 @@ Strictly isolates secret data from PublicState, provides board lifecycle methods
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -310,12 +311,148 @@ class GameEngine:
 
 
 # ---------------------------------------------------------------------------
-# Direct Semantic Evaluator (Task 4 Placeholder)
+# Direct Semantic Evaluator (Task 4 / Section 4.2)
 # ---------------------------------------------------------------------------
 
-def evaluate_clue(clue: Clue, assignment: dict[str, Status]) -> bool:
+def _infer_size(assignment: dict[str, Status]) -> int:
+    """Infer grid dimension N from assignment cell coordinates."""
+    n = len(assignment)
+    if n > 0:
+        root = math.isqrt(n)
+        if root * root == n:
+            return root
+
+    # Fallback: scan maximum row/col index in coordinates
+    max_r = 0
+    max_c = 0
+    for coord in assignment.keys():
+        if len(coord) >= 2 and coord[0].isalpha() and coord[1:].isdigit():
+            c_idx = ord(coord[0].upper()) - ord("A")
+            r_idx = int(coord[1:]) - 1
+            max_r = max(max_r, r_idx)
+            max_c = max(max_c, c_idx)
+    return max(max_r, max_c) + 1
+
+
+def evaluate_clue(
+    clue: Clue,
+    assignment: dict[str, Status],
+    size: int | None = None,
+) -> bool:
     """Evaluate whether a Clue holds under a complete truth assignment.
 
-    (Full implementation scheduled for Task 4).
+    Acts as an independent semantic oracle without calling CNF encoder or SAT solver.
+
+    Supported Clue Templates:
+    - FACT: assignment[target] == status
+    - SAME: assignment[a] == assignment[b]
+    - DIFFERENT: assignment[a] != assignment[b]
+    - EXACTLY: count(Criminals in region) == k
+    - AT_LEAST: count(Criminals in region) >= k
+    - AT_MOST: count(Criminals in region) <= k
+    - PARITY: count(Criminals in region) % 2 == (0 if EVEN else 1)
+    - COMPARE_COUNT: count(Criminals in r1) (op) count(Criminals in r2)
+
+    Args:
+        clue: Clue object (models.Clue).
+        assignment: Complete mapping of cell coordinates to Status ("CRIMINAL" | "INNOCENT").
+        size: Optional grid dimension. If omitted, inferred from assignment.
+
+    Returns:
+        bool: True if the clue's propositional condition is satisfied, False otherwise.
+
+    Raises:
+        KeyError: If a cell required to evaluate the clue is missing from assignment.
+        ValueError: If clue fields or region definitions are malformed.
     """
-    raise NotImplementedError("Direct Semantic Evaluator will be implemented in Task 4.")
+    if not isinstance(clue, Clue):
+        raise TypeError(f"Expected Clue object, got {type(clue).__name__}")
+
+    if size is None:
+        size = _infer_size(assignment)
+
+    ctype = clue.type
+
+    if ctype == "FACT":
+        if clue.target is None or clue.status is None:
+            raise ValueError(f"FACT clue {clue.clue_id!r} missing target or status.")
+        if clue.target not in assignment:
+            raise KeyError(f"Cell {clue.target!r} missing from assignment for FACT clue {clue.clue_id!r}.")
+        return assignment[clue.target] == clue.status
+
+    if ctype == "SAME":
+        if clue.a is None or clue.b is None:
+            raise ValueError(f"SAME clue {clue.clue_id!r} missing 'a' or 'b'.")
+        if clue.a not in assignment:
+            raise KeyError(f"Cell {clue.a!r} missing from assignment for SAME clue {clue.clue_id!r}.")
+        if clue.b not in assignment:
+            raise KeyError(f"Cell {clue.b!r} missing from assignment for SAME clue {clue.clue_id!r}.")
+        return assignment[clue.a] == assignment[clue.b]
+
+    if ctype == "DIFFERENT":
+        if clue.a is None or clue.b is None:
+            raise ValueError(f"DIFFERENT clue {clue.clue_id!r} missing 'a' or 'b'.")
+        if clue.a not in assignment:
+            raise KeyError(f"Cell {clue.a!r} missing from assignment for DIFFERENT clue {clue.clue_id!r}.")
+        if clue.b not in assignment:
+            raise KeyError(f"Cell {clue.b!r} missing from assignment for DIFFERENT clue {clue.clue_id!r}.")
+        return assignment[clue.a] != assignment[clue.b]
+
+    if ctype in ("EXACTLY", "AT_LEAST", "AT_MOST"):
+        if clue.region is None or clue.k is None:
+            raise ValueError(f"{ctype} clue {clue.clue_id!r} missing region or k.")
+        cells = resolve_region(clue.region, size)
+        for c in cells:
+            if c not in assignment:
+                raise KeyError(f"Cell {c!r} in region of clue {clue.clue_id!r} missing from assignment.")
+
+        criminal_count = sum(1 for c in cells if assignment[c] == "CRIMINAL")
+        if ctype == "EXACTLY":
+            return criminal_count == clue.k
+        elif ctype == "AT_LEAST":
+            return criminal_count >= clue.k
+        else:  # AT_MOST
+            return criminal_count <= clue.k
+
+    if ctype == "PARITY":
+        if clue.region is None or clue.parity is None:
+            raise ValueError(f"PARITY clue {clue.clue_id!r} missing region or parity.")
+        cells = resolve_region(clue.region, size)
+        for c in cells:
+            if c not in assignment:
+                raise KeyError(f"Cell {c!r} in region of clue {clue.clue_id!r} missing from assignment.")
+
+        criminal_count = sum(1 for c in cells if assignment[c] == "CRIMINAL")
+        expected_remainder = 0 if clue.parity == "EVEN" else 1
+        return (criminal_count % 2) == expected_remainder
+
+    if ctype == "COMPARE_COUNT":
+        if clue.r1 is None or clue.op is None or clue.r2 is None:
+            raise ValueError(f"COMPARE_COUNT clue {clue.clue_id!r} missing r1, op, or r2.")
+        cells1 = resolve_region(clue.r1, size)
+        cells2 = resolve_region(clue.r2, size)
+        for c in cells1:
+            if c not in assignment:
+                raise KeyError(f"Cell {c!r} in r1 of clue {clue.clue_id!r} missing from assignment.")
+        for c in cells2:
+            if c not in assignment:
+                raise KeyError(f"Cell {c!r} in r2 of clue {clue.clue_id!r} missing from assignment.")
+
+        count1 = sum(1 for c in cells1 if assignment[c] == "CRIMINAL")
+        count2 = sum(1 for c in cells2 if assignment[c] == "CRIMINAL")
+
+        if clue.op == "GT":
+            return count1 > count2
+        elif clue.op == "LT":
+            return count1 < count2
+        elif clue.op == "EQ":
+            return count1 == count2
+        else:
+            raise ValueError(f"Unsupported compare op: {clue.op!r}")
+
+    raise ValueError(f"Unsupported clue type: {ctype!r}")
+
+
+def evaluate_puzzle(puzzle: Puzzle, assignment: dict[str, Status]) -> bool:
+    """Evaluate whether an entire puzzle's clues are satisfied by a complete assignment."""
+    return all(evaluate_clue(cell.clue, assignment, puzzle.size) for cell in puzzle.cells)
