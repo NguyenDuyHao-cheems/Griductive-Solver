@@ -85,3 +85,7 @@ When modifying any schema in models.py, immediately check and update all consume
 Keep all tests passing before pushing to main or merging pull requests.
 
 Do not commit .venv/, __pycache__/, or temporary CSV/plot artifacts unless explicitly needed for docs/ or Report.pdf.
+
+## Report
+- /REPORT.md là report thô của đồ án
+- nếu người dùng có tác vụ nào liên quan đến báo cáo mà có liên quan đến hình ảnh, biểu đồ -> nhắc người dùng lưu vào /assets/
