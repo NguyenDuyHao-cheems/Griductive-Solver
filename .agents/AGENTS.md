@@ -89,3 +89,4 @@ Do not commit .venv/, __pycache__/, or temporary CSV/plot artifacts unless expli
 ## Report
 - /REPORT.md là report thô của đồ án
 - nếu người dùng có tác vụ nào liên quan đến báo cáo mà có liên quan đến hình ảnh, biểu đồ -> nhắc người dùng lưu vào /assets/
+- Khi bạn muốn sửa nội dung báo cáo, đảm bảo không thay đổi tiêu đề. Kiểm tra người dùng là ai rồi mới sửa, chỉ sửa phần mà người dùng đó được phép sửa. Phân công người dùng nào sửa phần nào trong báo cáo được ghi ở phân công trong /docs/Project2-*.md
