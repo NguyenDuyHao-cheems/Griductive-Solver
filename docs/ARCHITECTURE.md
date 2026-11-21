@@ -9,8 +9,8 @@ flowchart TB
         M["Shared Schemas (Puzzle, Clue, PublicState, CNFFormula, SolverResult, VerdictResponse, HintResponse, DeductionStep) & resolve_region()"]
     end
 
-    subgraph Presentation["Tầng giao diện (src/main.py)"]
-        GUI["GUI: Lưới N×N, Highlight vùng, Load / Restart / Hint / Auto Solve, Deduction Trace"]
+    subgraph Presentation["Tầng giao diện (src/main.py, src/ui/)"]
+        GUI["GUI (Pygame): GriductiveApp, Board View, AgentAdapter, Lưới N×N, Highlight vùng, Load / Restart / Hint / Auto Solve, Deduction Trace"]
     end
 
     subgraph Domain["Tầng quản lý trò chơi (src/game_engine.py)"]
@@ -103,21 +103,21 @@ Phân loại hệ quả logic cho từng ô chưa giải, chạy vòng lặp suy
 
 Giao tiếp với GameEngine qua PublicState; gọi encoder.py và dpll.py để kiểm tra KB_t ∧ ¬C_i và KB_t ∧ C_i.
 
-src/main.py
+src/main.py & src/ui/
 
 Khoa
 
-Hiển thị lưới N×N, thẻ úp/ngửa, gán phán quyết thủ công, tô sáng vùng khi chọn manh mối, điều khiển Load, Restart, Hint, Auto Solve và bảng trace.
+Giao diện Pygame (`main.py`, `ui/app.py`, `ui/board_view.py`, `ui/clue_formatter.py`, `ui/agent_adapter.py`, avatar & `CardFlipAnimation`): hiển thị lưới 3×3–5×5 từ PublicState, thẻ úp/ngửa, gán phán quyết thủ công, tô sáng vùng khi chọn manh mối, điều khiển Load, Restart, Hint, Auto Solve và bảng Deduction Trace.
 
-Gọi API của GameEngine và LogicAgent; dùng resolve_region() để highlight ô trên lưới.
+Gọi GameEngine và cô lập LogicAgent sau `AgentAdapter` (chỉ truyền `PublicState`; tự động vô hiệu hóa verdict/Hint/Auto Solve khi Agent chưa sẵn sàng); highlight qua `GameEngine.get_clue_highlight_cells()` / `models.resolve_region()`.
 
 src/experiments/
 
 Bảo & Khoa
 
-Chạy benchmark tự động trên bộ puzzle 3×3, 4×4, 5×5 (có timeout guard), xuất CSV 6 nhóm chỉ số và vẽ biểu đồ cho báo cáo.
+Chạy benchmark tự động trên bộ puzzle 3×3, 4×4, 5×5 (có timeout guard) (Bảo) và tổng hợp bảng Markdown cùng 4 biểu đồ PNG cho 6 nhóm chỉ số qua `plot_results.py`, giữ nguyên các dòng failure/timeout/missing-status và không vẽ số đo thiếu thành 0 (Khoa).
 
-Đọc src/puzzles/*.json; xuất benchmark_results.csv và các hình biểu đồ.
+Đọc src/puzzles/*.json; xuất benchmark_results.csv, `assets/benchmark_summary.md` và các hình biểu đồ PNG trong `assets/`.
 
 3. Luồng tương tác chính
 
