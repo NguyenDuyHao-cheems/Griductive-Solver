@@ -1,0 +1,282 @@
+{
+  "puzzle_id": "puzzle_4x4_01",
+  "size": 4,
+  "initial_revealed": [
+    "A1",
+    "D4"
+  ],
+  "cells": [
+    {
+      "coord": "A1",
+      "row": 0,
+      "col": 0,
+      "name": "Alice",
+      "occupation": "Architect",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A1",
+        "type": "DIFFERENT",
+        "a": "C1",
+        "b": "D2",
+        "text": "Charlie (C1) and Hannah (D2) have different statuses."
+      }
+    },
+    {
+      "coord": "B1",
+      "row": 0,
+      "col": 1,
+      "name": "Bob",
+      "occupation": "Baker",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B1",
+        "type": "COMPARE_COUNT",
+        "op": "GT",
+        "text": "There are more criminals than column C in column B.",
+        "r1": {
+          "kind": "COL",
+          "target": "B"
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "C1",
+      "row": 0,
+      "col": 2,
+      "name": "Charlie",
+      "occupation": "Chef",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C1",
+        "type": "COMPARE_COUNT",
+        "op": "LT",
+        "text": "There are fewer criminals than column D in row 2.",
+        "r1": {
+          "kind": "ROW",
+          "target": 1
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "D"
+        }
+      }
+    },
+    {
+      "coord": "D1",
+      "row": 0,
+      "col": 3,
+      "name": "Diana",
+      "occupation": "Doctor",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D1",
+        "type": "DIFFERENT",
+        "a": "D2",
+        "b": "D4",
+        "text": "Hannah (D2) and Paula (D4) have different statuses."
+      }
+    },
+    {
+      "coord": "A2",
+      "row": 1,
+      "col": 0,
+      "name": "Ethan",
+      "occupation": "Engineer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A2",
+        "type": "SAME",
+        "a": "C3",
+        "b": "D4",
+        "text": "Kevin (C3) and Paula (D4) have the same status."
+      }
+    },
+    {
+      "coord": "B2",
+      "row": 1,
+      "col": 1,
+      "name": "Fiona",
+      "occupation": "Florist",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B2",
+        "type": "DIFFERENT",
+        "a": "B1",
+        "b": "B2",
+        "text": "Bob (B1) and Fiona (B2) have different statuses."
+      }
+    },
+    {
+      "coord": "C2",
+      "row": 1,
+      "col": 2,
+      "name": "George",
+      "occupation": "Guard",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C2",
+        "type": "SAME",
+        "a": "B4",
+        "b": "C4",
+        "text": "Nora (B4) and Oscar (C4) have the same status."
+      }
+    },
+    {
+      "coord": "D2",
+      "row": 1,
+      "col": 3,
+      "name": "Hannah",
+      "occupation": "Historian",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D2",
+        "type": "FACT",
+        "target": "B4",
+        "status": "INNOCENT",
+        "text": "Nora (B4) is innocent."
+      }
+    },
+    {
+      "coord": "A3",
+      "row": 2,
+      "col": 0,
+      "name": "Ian",
+      "occupation": "Inspector",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A3",
+        "type": "PARITY",
+        "parity": "EVEN",
+        "text": "An even number of criminals in column B.",
+        "region": {
+          "kind": "COL",
+          "target": "B"
+        }
+      }
+    },
+    {
+      "coord": "B3",
+      "row": 2,
+      "col": 1,
+      "name": "Julia",
+      "occupation": "Judge",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B3",
+        "type": "SAME",
+        "a": "A3",
+        "b": "A4",
+        "text": "Ian (A3) and Mike (A4) have the same status."
+      }
+    },
+    {
+      "coord": "C3",
+      "row": 2,
+      "col": 2,
+      "name": "Kevin",
+      "occupation": "Knight",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C3",
+        "type": "EXACTLY",
+        "k": 3,
+        "text": "Exactly 3 criminals in column D.",
+        "region": {
+          "kind": "COL",
+          "target": "D"
+        }
+      }
+    },
+    {
+      "coord": "D3",
+      "row": 2,
+      "col": 3,
+      "name": "Laura",
+      "occupation": "Lawyer",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D3",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in row 3.",
+        "region": {
+          "kind": "ROW",
+          "target": 2
+        }
+      }
+    },
+    {
+      "coord": "A4",
+      "row": 3,
+      "col": 0,
+      "name": "Mike",
+      "occupation": "Mechanic",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A4",
+        "type": "PARITY",
+        "parity": "EVEN",
+        "text": "Ethan (A2) has an even number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "A2"
+        }
+      }
+    },
+    {
+      "coord": "B4",
+      "row": 3,
+      "col": 1,
+      "name": "Nora",
+      "occupation": "Nurse",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B4",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Bob (B1) has exactly 0 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B1"
+        }
+      }
+    },
+    {
+      "coord": "C4",
+      "row": 3,
+      "col": 2,
+      "name": "Oscar",
+      "occupation": "Officer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C4",
+        "type": "SAME",
+        "a": "B2",
+        "b": "C3",
+        "text": "Fiona (B2) and Kevin (C3) have the same status."
+      }
+    },
+    {
+      "coord": "D4",
+      "row": 3,
+      "col": 3,
+      "name": "Paula",
+      "occupation": "Pilot",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D4",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Julia (B3) has exactly 0 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B3"
+        }
+      }
+    }
+  ]
+}

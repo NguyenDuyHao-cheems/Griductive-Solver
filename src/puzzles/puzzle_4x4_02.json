@@ -1,0 +1,275 @@
+{
+  "puzzle_id": "puzzle_4x4_02",
+  "size": 4,
+  "initial_revealed": [
+    "B2",
+    "C3"
+  ],
+  "cells": [
+    {
+      "coord": "A1",
+      "row": 0,
+      "col": 0,
+      "name": "Alice",
+      "occupation": "Architect",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_A1",
+        "type": "SAME",
+        "a": "C2",
+        "b": "B3",
+        "text": "George (C2) and Julia (B3) have the same status."
+      }
+    },
+    {
+      "coord": "B1",
+      "row": 0,
+      "col": 1,
+      "name": "Bob",
+      "occupation": "Baker",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B1",
+        "type": "DIFFERENT",
+        "a": "A1",
+        "b": "A2",
+        "text": "Alice (A1) and Ethan (A2) have different statuses."
+      }
+    },
+    {
+      "coord": "C1",
+      "row": 0,
+      "col": 2,
+      "name": "Charlie",
+      "occupation": "Chef",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C1",
+        "type": "FACT",
+        "target": "B4",
+        "status": "INNOCENT",
+        "text": "Nora (B4) is innocent."
+      }
+    },
+    {
+      "coord": "D1",
+      "row": 0,
+      "col": 3,
+      "name": "Diana",
+      "occupation": "Doctor",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D1",
+        "type": "DIFFERENT",
+        "a": "B3",
+        "b": "C4",
+        "text": "Julia (B3) and Oscar (C4) have different statuses."
+      }
+    },
+    {
+      "coord": "A2",
+      "row": 1,
+      "col": 0,
+      "name": "Ethan",
+      "occupation": "Engineer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A2",
+        "type": "DIFFERENT",
+        "a": "B1",
+        "b": "D1",
+        "text": "Bob (B1) and Diana (D1) have different statuses."
+      }
+    },
+    {
+      "coord": "B2",
+      "row": 1,
+      "col": 1,
+      "name": "Fiona",
+      "occupation": "Florist",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B2",
+        "type": "AT_MOST",
+        "k": 1,
+        "text": "At most 1 criminals in column C.",
+        "region": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "C2",
+      "row": 1,
+      "col": 2,
+      "name": "George",
+      "occupation": "Guard",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C2",
+        "type": "EXACTLY",
+        "k": 1,
+        "text": "Alice (A1) has exactly 1 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "A1"
+        }
+      }
+    },
+    {
+      "coord": "D2",
+      "row": 1,
+      "col": 3,
+      "name": "Hannah",
+      "occupation": "Historian",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D2",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Exactly 0 criminals in column D.",
+        "region": {
+          "kind": "COL",
+          "target": "D"
+        }
+      }
+    },
+    {
+      "coord": "A3",
+      "row": 2,
+      "col": 0,
+      "name": "Ian",
+      "occupation": "Inspector",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_A3",
+        "type": "COMPARE_COUNT",
+        "op": "LT",
+        "text": "There are fewer criminals than row 3 in row 2.",
+        "r1": {
+          "kind": "ROW",
+          "target": 1
+        },
+        "r2": {
+          "kind": "ROW",
+          "target": 2
+        }
+      }
+    },
+    {
+      "coord": "B3",
+      "row": 2,
+      "col": 1,
+      "name": "Julia",
+      "occupation": "Judge",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B3",
+        "type": "SAME",
+        "a": "A2",
+        "b": "C2",
+        "text": "Ethan (A2) and George (C2) have the same status."
+      }
+    },
+    {
+      "coord": "C3",
+      "row": 2,
+      "col": 2,
+      "name": "Kevin",
+      "occupation": "Knight",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C3",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Oscar (C4) has exactly 0 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "C4"
+        }
+      }
+    },
+    {
+      "coord": "D3",
+      "row": 2,
+      "col": 3,
+      "name": "Laura",
+      "occupation": "Lawyer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D3",
+        "type": "AT_LEAST",
+        "k": 3,
+        "text": "At least 3 criminals in column A.",
+        "region": {
+          "kind": "COL",
+          "target": "A"
+        }
+      }
+    },
+    {
+      "coord": "A4",
+      "row": 3,
+      "col": 0,
+      "name": "Mike",
+      "occupation": "Mechanic",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_A4",
+        "type": "DIFFERENT",
+        "a": "B1",
+        "b": "B3",
+        "text": "Bob (B1) and Julia (B3) have different statuses."
+      }
+    },
+    {
+      "coord": "B4",
+      "row": 3,
+      "col": 1,
+      "name": "Nora",
+      "occupation": "Nurse",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B4",
+        "type": "PARITY",
+        "parity": "ODD",
+        "text": "Ian (A3) has an odd number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "A3"
+        }
+      }
+    },
+    {
+      "coord": "C4",
+      "row": 3,
+      "col": 2,
+      "name": "Oscar",
+      "occupation": "Officer",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_C4",
+        "type": "SAME",
+        "a": "C2",
+        "b": "C3",
+        "text": "George (C2) and Kevin (C3) have the same status."
+      }
+    },
+    {
+      "coord": "D4",
+      "row": 3,
+      "col": 3,
+      "name": "Paula",
+      "occupation": "Pilot",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D4",
+        "type": "SAME",
+        "a": "D3",
+        "b": "D4",
+        "text": "Laura (D3) and Paula (D4) have the same status."
+      }
+    }
+  ]
+}
