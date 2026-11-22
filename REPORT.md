@@ -4,19 +4,110 @@ CSC14003 — Introduction to Artificial Intelligence: Project 2 — Griductive S
 
 1.1. Tổng quan kế hoạch và Lộ trình thực hiện
 
+Dự án được thực hiện bởi nhóm 5 sinh viên. Toàn bộ quá trình triển khai chia làm ba giai đoạn liên tiếp:
+
+- **Giai đoạn 1 (18/11 – 22/11): Thiết kế kiến trúc và cài đặt các module độc lập.**
+  - Ngày 19/11: Hoàn thiện `src/models.py`, xác định các cấu trúc dữ liệu dùng chung (`Puzzle`, `Clue`, `PublicState`, `CNFFormula`, `SolverResult`, `VerdictResponse`, `HintResponse`, `DeductionStep`) cùng hàm chuẩn hóa vùng `resolve_region()`.
+  - Ngày 20/11: Xây dựng tập dữ liệu kiểm thử khói gồm 2 puzzle mẫu (`sample_3x3.json`, `sample_4x4.json`); hoàn thành bảng ánh xạ biến tất định và bộ kiểm tra tính hợp lệ của manh mối (`src/encoder.py`).
+  - Ngày 21/11: Cài đặt và kiểm thử bộ giải DPLL SAT Solver thuần Python (`src/dpll.py`).
+  - Ngày 22/11: Hoàn tất Game Engine, bộ thẩm định ngữ nghĩa trực tiếp (`src/game_engine.py`) và bộ mã hóa CNF tự động (`src/encoder.py`).
+
+- **Giai đoạn 2 (23/11 – 25/11): Tích hợp tác tử logic, xây dựng dữ liệu benchmark và giao diện.**
+  - Ngày 23/11: Cài đặt thuật toán phân loại hệ quả logic và hàm kiểm tra tính duy nhất của nghiệm (`check_uniqueness`) trong `src/agent.py`; dựng khung giao diện đồ họa GUI trong `src/main.py`.
+  - Ngày 24/11: Hoàn thiện vòng lặp suy diễn không đoán, cơ chế sinh gợi ý và xuất vết suy diễn; thẩm định tập dữ liệu câu đố benchmark kích thước 3x3, 4x4 và 5x5 đảm bảo mỗi câu đố có nghiệm duy nhất.
+  - Ngày 25/11: Tích hợp toàn diện giao diện với Game Engine và Agent; hỗ trợ thao tác gán phán quyết thủ công, tô sáng vùng manh mối và chế độ giải tự động; chạy kiểm thử tích hợp toàn hệ thống.
+
+- **Giai đoạn 3 (26/11 – 28/11): Thực nghiệm, đánh giá và đóng gói.**
+  - Ngày 26/11: Chạy benchmark tự động trên toàn bộ tập dữ liệu, xuất bảng số liệu 6 nhóm chỉ số ra tập tin CSV.
+  - Ngày 27/11: Lập biểu đồ trực quan hóa dữ liệu thực nghiệm, hoàn thiện các phần nội dung của báo cáo kỹ thuật và ghi hình video minh họa chức năng hệ thống.
+  - Ngày 28/11: Rà soát toàn bộ mã nguồn trên môi trường thực thi sạch, hoàn thiện tài liệu hướng dẫn và đóng gói nộp bài.
+
 1.2. Kiến trúc hệ thống và Giao diện giữa các module
 
+Hệ thống được tổ chức theo kiến trúc phân tầng rõ ràng, đặt toàn bộ mã nguồn thực thi bên trong thư mục `src/`. Các module giao tiếp với nhau thông qua hợp đồng dữ liệu tại `src/models.py`:
+
+- **Lớp dữ liệu dùng chung (`src/models.py`):** Nơi định nghĩa duy nhất cho các dataclass trao đổi giữa các tầng và hàm `resolve_region()`. Việc tập trung logic phân giải tọa độ vùng (hàng, cột, lân cận, danh sách tường minh) tại một vị trí giúp loại bỏ nguy cơ lệch tọa độ giữa Game Engine, Encoder và giao diện hiển thị.
+- **Tầng quản lý trò chơi (`src/game_engine.py`):** Lớp `GameEngine` nắm giữ câu đố gốc, trạng thái ẩn của nhân vật (`hidden_status`) và các manh mối chưa mở. Module thực hiện nguyên tắc ẩn giấu thông tin nghiêm ngặt: hàm `get_public_state()` chỉ xuất bản sao trạng thái công khai (`PublicState`) gồm các manh mối đã lật và phán quyết đã chứng minh. Hàm `evaluate_clue()` kiểm tra trực tiếp chân trị của manh mối trên một phép gán hoàn chỉnh mà không qua biểu diễn CNF, đóng vai trò nguồn kiểm chứng độc lập cho bộ mã hóa.
+- **Tầng mã hóa logic (`src/encoder.py`):** Cung cấp các hàm ánh xạ biến tất định, kiểm tra ràng buộc tham số manh mối và chuyển đổi các mẫu manh mối sang dạng chuẩn hội CNF. Bộ mã hóa tổng hợp các manh mối đã mở và phán quyết đã biết thành cơ sở tri thức $KB_t$.
+- **Tầng giải SAT (`src/dpll.py`):** Cài đặt thuật toán DPLL thuần Python, nhận công thức CNF và danh sách giả định tạm thời để kiểm tra tính thỏa được mà không thay đổi cấu trúc $KB_t$ gốc, đồng thời đo lường các chỉ số quyết định, lan truyền đơn vị, quay lui và thời gian tính toán.
+- **Tầng tác tử suy diễn (`src/agent.py`):** Lớp `DeductiveLogicAgent` tiếp nhận `PublicState`, điều phối các truy vấn SAT qua bộ mã hóa và bộ giải DPLL để phân loại trạng thái logic của từng ô, thực hiện vòng lặp suy diễn không đoán, xuất vết suy diễn chi tiết và cung cấp gợi ý nước đi tiếp theo.
+- **Tầng giao diện người dùng (`src/main.py`):** Cung cấp giao diện trực quan hiển thị lưới ô cờ, xử lý các thao tác tải câu đố, khởi động lại, nhận phán quyết từ người chơi, tô sáng các ô liên quan khi chọn manh mối và hiển thị tiến trình tự động giải.
+
+Kiến trúc bảo đảm nguyên tắc ẩn giấu thông tin: Tác tử logic và giao diện người dùng không thể truy cập trạng thái bí mật hay các manh mối chưa mở. Khi người chơi gửi một phán quyết chưa đủ điều kiện chứng minh từ tri thức hiện tại, Game Engine từ chối phán quyết và giữ nguyên trạng thái bàn cờ.
+
 1.3. Bảng phân công công việc và Tỷ lệ hoàn thành của từng thành viên
+
+| Thành viên | Trách nhiệm chính | Sản phẩm bàn giao | Tỷ lệ hoàn thành |
+| :--- | :--- | :--- | :---: |
+| **Hào** | Quản lý schema dùng chung, Game Engine, Direct Semantic Evaluator, tập dữ liệu puzzle (3x3, 4x4, 5x5), đóng gói dự án. | `src/models.py`, `src/game_engine.py`, `src/puzzles/*.json`, mục 1 và 2 báo cáo, `README.md`. | 100% |
+| **Tuân** | Ánh xạ biến tất định, bộ kiểm tra tính hợp lệ của manh mối, bộ mã hóa CNF tự động (6 mẫu cốt lõi và 2 mở rộng). | `src/encoder.py`, `src/tests/test_encoder.py`, mục 3 báo cáo. | 100% |
+| **Bảo** | Bộ giải DPLL SAT Solver thuần Python, hỗ trợ giả định, ghi nhận metrics, xây dựng kịch bản benchmark tự động. | `src/dpll.py`, `src/tests/test_dpll.py`, `src/experiments/run_experiments.py`, mục 4.1 báo cáo. | 100% |
+| **Tuấn** | Tác tử suy diễn logic, phân loại hệ quả logic, kiểm tra nghiệm duy nhất, vòng lặp suy diễn không đoán, tạo vết suy diễn và gợi ý. | `src/agent.py`, `src/tests/test_agent.py`, mục 4.2 đến 4.4 báo cáo. | 100% |
+| **Khoa** | Giao diện đồ họa người dùng, tương tác bàn cờ, trực quan hóa manh mối, tổng hợp biểu đồ thực nghiệm, ghi hình video demo. | `src/main.py`, `src/experiments/plot_results.py`, mục 5 báo cáo, video demo minh họa. | 100% |
 
 2. Phát biểu bài toán (Problem Formulation)
 
 2.1. Biến mệnh đề (Propositional Variables)
 
+Bàn cờ kích thước $N \times N$ gồm các ô tọa độ $(r, c)$, với hàng $r \in \{0, \ldots, N-1\}$ và cột $c \in \{0, \ldots, N-1\}$. Ký hiệu hiển thị quy ước cột theo chữ cái (A, B, C,...) và hàng theo số bắt đầu từ 1. Mỗi ô chứa một nhân vật có trạng thái danh tính ẩn thuộc tập $\{\text{CRIMINAL}, \text{INNOCENT}\}$.
+
+Với mỗi nhân vật tại vị trí $i$, đặt một biến Boolean chính $C_i$:
+- $C_i = \text{True}$: nhân vật tại ô $i$ là `CRIMINAL`.
+- $C_i = \text{False}$: nhân vật tại ô $i$ là `INNOCENT`.
+
+Ánh xạ biến chính được thiết lập tất định theo thứ tự quét hàng (row-major order): ô tại hàng $r$, cột $c$ nhận chỉ số định danh $v = r \cdot N + c + 1$. Tổng số biến chính của bàn cờ là $N^2$. Trong quá trình chuyển đổi các ràng buộc đếm hoặc ràng buộc mở rộng sang CNF, các biến phụ (auxiliary variables) được cấp phát chỉ số bắt đầu từ $N^2 + 1$. Các biến phụ này phục vụ mục đích biểu diễn logic ngưỡng và được tách biệt hoàn toàn khỏi tập biến chính, bảo đảm không làm biến dạng phép chiếu nghiệm trên các nhân vật của bài toán.
+
 2.2. Ngôn ngữ manh mối cốt lõi và Phần mở rộng (Clue Language & Extensions)
+
+Mỗi manh mối áp dụng trên một vùng ô $R \subseteq \{1, \ldots, N^2\}$. Hàm `resolve_region(region, size)` xác định tập các ô thuộc $R$ dựa trên 4 loại cấu trúc:
+- `ROW`: Tập hợp tất cả các ô trên cùng một chỉ số hàng.
+- `COL`: Tập hợp tất cả các ô trên cùng một chỉ số cột.
+- `NEIGHBORS`: Tập hợp các ô kề cạnh hoặc kề góc với ô chỉ định (tối đa 8 ô lân cận, không chứa chính ô chỉ định).
+- `EXPLICIT`: Danh sách các tọa độ ô được liệt kê cụ thể.
+
+Sáu mẫu manh mối cốt lõi bao gồm:
+- `FACT`: Xác định trực tiếp trạng thái của một nhân vật. Biểu diễn logic tương đương mệnh đề đơn $C_i$ (nếu `CRIMINAL`) hoặc $\neg C_i$ (nếu `INNOCENT`).
+- `SAME`: Hai nhân vật có cùng trạng thái danh tính: $C_a \leftrightarrow C_b$.
+- `DIFFERENT`: Hai nhân vật có trạng thái đối lập: $C_a \oplus C_b$.
+- `EXACTLY`: Số lượng nhân vật `CRIMINAL` trong vùng $R$ bằng đúng $k$: $\sum_{i \in R} C_i = k$ (với $0 \le k \le |R|$).
+- `AT_LEAST`: Số lượng nhân vật `CRIMINAL` trong vùng $R$ tối thiểu là $k$: $\sum_{i \in R} C_i \ge k$.
+- `AT_MOST`: Số lượng nhân vật `CRIMINAL` trong vùng $R$ tối đa là $k$: $\sum_{i \in R} C_i \le k$.
+
+Hai mẫu manh mối mở rộng được nhóm xây dựng thêm:
+- `PARITY`: Tính chẵn lẻ của tổng số `CRIMINAL` trong vùng $R$:
+  $$\bigoplus_{i \in R} C_i = \begin{cases} 1 & \text{khi manh mối là ODD} \\ 0 & \text{khi manh mối là EVEN} \end{cases}$$
+- `COMPARE_COUNT`: So sánh tương quan số lượng `CRIMINAL` giữa hai vùng $R_1$ và $R_2$ qua toán tử $op \in \{\text{GT}, \text{LT}, \text{EQ}\}$:
+  $$\sum_{i \in R_1} C_i > \sum_{j \in R_2} C_j \quad (\text{GT}), \quad \sum_{i \in R_1} C_i < \sum_{j \in R_2} C_j \quad (\text{LT}), \quad \sum_{i \in R_1} C_i = \sum_{j \in R_2} C_j \quad (\text{EQ})$$
 
 2.3. Cơ sở tri thức (Knowledge Base)
 
+Tại mỗi bước suy diễn $t$, cơ sở tri thức công khai $KB_t$ được xây dựng thuần túy từ thông tin đã được tiết lộ:
+$$KB_t = \left( \bigwedge_{c \in \mathcal{C}_t} \text{CNF}(c) \right) \land \left( \bigwedge_{v \in \mathcal{V}_t} \text{unit}(v) \right)$$
+trong đó $\mathcal{C}_t$ là tập hợp các manh mối đã lật mở, $\mathcal{V}_t$ là tập hợp các phán quyết đã được chứng minh hợp lệ, và $\text{unit}(v)$ là mệnh đề đơn biểu diễn phán quyết ($C_i$ nếu `CRIMINAL`, $\neg C_i$ nếu `INNOCENT`).
+
+Cơ sở tri thức $KB_t$ tuân thủ các nguyên lý:
+- Không đưa thông tin chưa lật hoặc trạng thái ẩn vào $KB_t$.
+- Phân biệt giữa nghiệm thỏa mãn (satisfying model) và hệ quả logic (entailment): Một mô hình thỏa mãn chỉ là một khả năng gán giá trị hợp lệ cho các biến. Phán quyết về trạng thái của nhân vật $i$ chỉ được chấp nhận khi trạng thái đó đúng trong toàn bộ các mô hình của $KB_t$, tức $KB_t \models C_i$ hoặc $KB_t \models \neg C_i$.
+
 2.4. Giao thức tiết lộ và Vòng lặp suy diễn (Reveal Protocol & Deduction Loop)
+
+Việc kiểm tra hệ quả logic cho nhân vật $i$ tại bước $t$ được chuyển về bài toán kiểm tra tính thỏa được của công thức CNF bằng phương pháp phản chứng:
+- $KB_t \models C_i \iff KB_t \land \neg C_i$ là UNSAT. Khi đó, nhân vật $i$ được chứng minh là `CRIMINAL`.
+- $KB_t \models \neg C_i \iff KB_t \land C_i$ là UNSAT. Khi đó, nhân vật $i$ được chứng minh là `INNOCENT`.
+- Nếu cả hai bài toán đều SAT, trạng thái của ô $i$ là `UNKNOWN`, chưa thể đưa ra kết luận logic từ $KB_t$.
+- Nếu bản thân $KB_t$ là UNSAT, trạng thái là `INCONSISTENT`, chỉ ra cơ sở tri thức chứa mâu thuẫn.
+
+Giao thức phản hồi phán quyết của trò chơi hoạt động như sau:
+1. Khi người chơi hoặc tác tử gửi phán quyết cho ô $i$, hệ thống kiểm tra hệ quả logic từ $PublicState$.
+2. Nếu phán quyết trùng với trạng thái bị bắt buộc (`ENTAILED`), phán quyết được chấp nhận. Thẻ tại ô $i$ được lật mở, manh mối mới được tiết lộ và cập nhật vào $KB_{t+1}$.
+3. Nếu trạng thái ô $i$ là `UNKNOWN`, phán quyết bị từ chối với lý do `NOT_PROVABLE`. Trạng thái bàn cờ giữ nguyên, không lật thẻ và không để lộ thông tin manh mối ẩn.
+4. Nếu trạng thái ô $i$ bị bắt buộc theo chiều ngược lại, phán quyết bị từ chối với lý do `CONTRADICTED`. Trạng thái bàn cờ giữ nguyên.
+
+Vòng lặp suy diễn không đoán (No-Guess Deduction Loop) tự động hóa quá trình giải:
+1. Bắt đầu tại $t = 0$ với các manh mối ban đầu được lật mở.
+2. Duyệt qua các ô chưa giải theo thứ tự tất định (hàng trước, cột sau).
+3. Với mỗi ô, kiểm tra hai truy vấn SAT tương ứng. Ngay khi phát hiện một ô có trạng thái bị bắt buộc, thực hiện phán quyết, lật thẻ ô đó, ghi nhận bước suy diễn (`DeductionStep`), cập nhật sang $KB_{t+1}$ và tiếp tục bước $t+1$.
+4. Vòng lặp kết thúc thành công khi tất cả các ô được giải quyết. Nếu toàn bộ các ô chưa giải đều ở trạng thái `UNKNOWN`, bộ giải dừng lại và thông báo không thể giải tiếp mà không đoán.
 
 3. Mã hóa CNF (CNF Encoding)
 
