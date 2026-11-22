@@ -221,3 +221,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Personal notes & assignment PDF (local only)
+Bao.md
+AI - Project 2-*.pdf
