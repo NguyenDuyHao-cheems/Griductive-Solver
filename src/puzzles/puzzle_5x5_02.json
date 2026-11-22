@@ -1,0 +1,451 @@
+{
+  "puzzle_id": "puzzle_5x5_02",
+  "size": 5,
+  "initial_revealed": [
+    "A1",
+    "C3",
+    "E5"
+  ],
+  "cells": [
+    {
+      "coord": "A1",
+      "row": 0,
+      "col": 0,
+      "name": "Arthur",
+      "occupation": "Architect",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A1",
+        "type": "PARITY",
+        "parity": "ODD",
+        "text": "Olivia (E3) has an odd number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "E3"
+        }
+      }
+    },
+    {
+      "coord": "B1",
+      "row": 0,
+      "col": 1,
+      "name": "Beatrice",
+      "occupation": "Baker",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B1",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in row 5.",
+        "region": {
+          "kind": "ROW",
+          "target": 4
+        }
+      }
+    },
+    {
+      "coord": "C1",
+      "row": 0,
+      "col": 2,
+      "name": "Charles",
+      "occupation": "Chef",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C1",
+        "type": "COMPARE_COUNT",
+        "op": "GT",
+        "text": "There are more criminals than column A in row 2.",
+        "r1": {
+          "kind": "ROW",
+          "target": 1
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "A"
+        }
+      }
+    },
+    {
+      "coord": "D1",
+      "row": 0,
+      "col": 3,
+      "name": "Daniel",
+      "occupation": "Doctor",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D1",
+        "type": "EXACTLY",
+        "k": 3,
+        "text": "Exactly 3 criminals in column E.",
+        "region": {
+          "kind": "COL",
+          "target": "E"
+        }
+      }
+    },
+    {
+      "coord": "E1",
+      "row": 0,
+      "col": 4,
+      "name": "Eleanor",
+      "occupation": "Engineer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_E1",
+        "type": "PARITY",
+        "parity": "EVEN",
+        "text": "Margaret (C3) has an even number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "C3"
+        }
+      }
+    },
+    {
+      "coord": "A2",
+      "row": 1,
+      "col": 0,
+      "name": "Felix",
+      "occupation": "Florist",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A2",
+        "type": "AT_MOST",
+        "k": 3,
+        "text": "At most 3 criminals in column E.",
+        "region": {
+          "kind": "COL",
+          "target": "E"
+        }
+      }
+    },
+    {
+      "coord": "B2",
+      "row": 1,
+      "col": 1,
+      "name": "Grace",
+      "occupation": "Guard",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B2",
+        "type": "EXACTLY",
+        "k": 1,
+        "text": "Exactly 1 criminal in column A.",
+        "region": {
+          "kind": "COL",
+          "target": "A"
+        }
+      }
+    },
+    {
+      "coord": "C2",
+      "row": 1,
+      "col": 2,
+      "name": "Henry",
+      "occupation": "Historian",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C2",
+        "type": "EXACTLY",
+        "k": 1,
+        "text": "Exactly 1 criminal in row 1.",
+        "region": {
+          "kind": "ROW",
+          "target": 0
+        }
+      }
+    },
+    {
+      "coord": "D2",
+      "row": 1,
+      "col": 3,
+      "name": "Irene",
+      "occupation": "Inspector",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D2",
+        "type": "DIFFERENT",
+        "a": "D1",
+        "b": "E2",
+        "text": "Daniel (D1) and Jack (E2) have different statuses."
+      }
+    },
+    {
+      "coord": "E2",
+      "row": 1,
+      "col": 4,
+      "name": "Jack",
+      "occupation": "Judge",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_E2",
+        "type": "EXACTLY",
+        "k": 4,
+        "text": "Exactly 4 criminals in row 3.",
+        "region": {
+          "kind": "ROW",
+          "target": 2
+        }
+      }
+    },
+    {
+      "coord": "A3",
+      "row": 2,
+      "col": 0,
+      "name": "Katherine",
+      "occupation": "Knight",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_A3",
+        "type": "COMPARE_COUNT",
+        "op": "LT",
+        "text": "There are fewer criminals than column C in column A.",
+        "r1": {
+          "kind": "COL",
+          "target": "A"
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "B3",
+      "row": 2,
+      "col": 1,
+      "name": "Louis",
+      "occupation": "Lawyer",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B3",
+        "type": "PARITY",
+        "parity": "ODD",
+        "text": "Louis (B3) has an odd number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B3"
+        }
+      }
+    },
+    {
+      "coord": "C3",
+      "row": 2,
+      "col": 2,
+      "name": "Margaret",
+      "occupation": "Mechanic",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_C3",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Beatrice (B1) has exactly 0 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B1"
+        }
+      }
+    },
+    {
+      "coord": "D3",
+      "row": 2,
+      "col": 3,
+      "name": "Nicholas",
+      "occupation": "Nurse",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_D3",
+        "type": "AT_MOST",
+        "k": 2,
+        "text": "At most 2 criminals in row 4.",
+        "region": {
+          "kind": "ROW",
+          "target": 3
+        }
+      }
+    },
+    {
+      "coord": "E3",
+      "row": 2,
+      "col": 4,
+      "name": "Olivia",
+      "occupation": "Officer",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_E3",
+        "type": "DIFFERENT",
+        "a": "B3",
+        "b": "B4",
+        "text": "Louis (B3) and Quinn (B4) have different statuses."
+      }
+    },
+    {
+      "coord": "A4",
+      "row": 3,
+      "col": 0,
+      "name": "Patrick",
+      "occupation": "Pilot",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A4",
+        "type": "DIFFERENT",
+        "a": "A3",
+        "b": "B4",
+        "text": "Katherine (A3) and Quinn (B4) have different statuses."
+      }
+    },
+    {
+      "coord": "B4",
+      "row": 3,
+      "col": 1,
+      "name": "Quinn",
+      "occupation": "Quartermaster",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B4",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Patrick (A4) has exactly 2 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "A4"
+        }
+      }
+    },
+    {
+      "coord": "C4",
+      "row": 3,
+      "col": 2,
+      "name": "Rachel",
+      "occupation": "Reporter",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_C4",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in column C.",
+        "region": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "D4",
+      "row": 3,
+      "col": 3,
+      "name": "Samuel",
+      "occupation": "Scientist",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D4",
+        "type": "EXACTLY",
+        "k": 3,
+        "text": "Exactly 3 criminals in column D.",
+        "region": {
+          "kind": "COL",
+          "target": "D"
+        }
+      }
+    },
+    {
+      "coord": "E4",
+      "row": 3,
+      "col": 4,
+      "name": "Theresa",
+      "occupation": "Teacher",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_E4",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in row 4.",
+        "region": {
+          "kind": "ROW",
+          "target": 3
+        }
+      }
+    },
+    {
+      "coord": "A5",
+      "row": 4,
+      "col": 0,
+      "name": "Ulysses",
+      "occupation": "Underwriter",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A5",
+        "type": "SAME",
+        "a": "C1",
+        "b": "C2",
+        "text": "Charles (C1) and Henry (C2) have the same status."
+      }
+    },
+    {
+      "coord": "B5",
+      "row": 4,
+      "col": 1,
+      "name": "Victoria",
+      "occupation": "Veterinarian",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B5",
+        "type": "DIFFERENT",
+        "a": "C1",
+        "b": "D2",
+        "text": "Charles (C1) and Irene (D2) have different statuses."
+      }
+    },
+    {
+      "coord": "C5",
+      "row": 4,
+      "col": 2,
+      "name": "Walter",
+      "occupation": "Writer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C5",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in column B.",
+        "region": {
+          "kind": "COL",
+          "target": "B"
+        }
+      }
+    },
+    {
+      "coord": "D5",
+      "row": 4,
+      "col": 3,
+      "name": "Xavier",
+      "occupation": "Xylophonist",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_D5",
+        "type": "EXACTLY",
+        "k": 2,
+        "text": "Exactly 2 criminals in row 2.",
+        "region": {
+          "kind": "ROW",
+          "target": 1
+        }
+      }
+    },
+    {
+      "coord": "E5",
+      "row": 4,
+      "col": 4,
+      "name": "Yvonne",
+      "occupation": "Youth Counselor",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_E5",
+        "type": "DIFFERENT",
+        "a": "C3",
+        "b": "D3",
+        "text": "Margaret (C3) and Nicholas (D3) have different statuses."
+      }
+    }
+  ]
+}

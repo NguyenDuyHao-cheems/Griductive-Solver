@@ -13,7 +13,7 @@
 | **Task 2** | Puzzle mẫu sớm (`sample_3x3.json`, `sample_4x4.json`) | 20/11 | **HOÀN THÀNH** | Dữ liệu kiểm thử sớm cho Encoder, Engine, Agent và GUI. |
 | **Task 3** | Game Engine (`src/game_engine.py`) | 22/11 | **HOÀN THÀNH** | Quản lý puzzle, thông tin ẩn, vòng đời, submit phán quyết no-guess. |
 | **Task 4** | Direct Semantic Evaluator (`evaluate_clue`) | 22/11 | **HOÀN THÀNH** | Bộ thẩm định ngữ nghĩa độc lập không qua CNF (Ground Truth Oracle). |
-| **Task 5** | Bộ dữ liệu Benchmark đầy đủ (3x3, 4x4, 5x5) | 24/11 | Sắp tới | Phối hợp với `check_uniqueness` của Tuấn để xác thực nghiệm duy nhất. |
+| **Task 5** | Bộ dữ liệu Benchmark đầy đủ (3x3, 4x4, 5x5) | 24/11 | **HOÀN THÀNH** | Bộ 8 puzzle (3 màn 3x3, 3 màn 4x4, 2 màn 5x5) đạt 100% UNIQUE và giải no-guess. |
 | **Task 6** | Báo cáo, README.md, requirements.txt, đóng gói nộp bài | 28/11 | Sắp tới | Hoàn thiện tài liệu theo quy chuẩn nộp bài của môn học. |
 
 ---
@@ -46,3 +46,18 @@
 - Đã thiết lập môi trường ảo `.venv` chuẩn Python 3.12.
 - Đồng bộ hóa [src/requirements.txt](file:///F:/H%C3%A0o_Folder/Hao_folder/Projects/Griductive-Solver/src/requirements.txt) và [requirements.txt](file:///F:/H%C3%A0o_Folder/Hao_folder/Projects/Griductive-Solver/requirements.txt) (`fastapi`, `uvicorn[standard]`, `pydantic`, `pytest`).
 - Bộ unit test chạy ổn định thông qua cả `unittest` tích hợp sẵn và `pytest`.
+
+### 2.5. Quyết định về Thiết Kế & Thẩm Định Bộ Dữ Liệu Puzzle Đầy Đủ (Task 5 — Mục 4.5)
+- **Quy mô bộ dữ liệu:** Hoàn thiện 8 file puzzle chuẩn JSON đặt tại `src/puzzles/`:
+  - 3 màn kích thước 3×3: `sample_3x3.json`, `puzzle_3x3_01.json`, `puzzle_3x3_02.json`.
+  - 3 màn kích thước 4×4: `sample_4x4.json`, `puzzle_4x4_01.json`, `puzzle_4x4_02.json`.
+  - 2 màn kích thước 5×5 (stress case): `puzzle_5x5_01.json`, `puzzle_5x5_02.json`.
+- **Độ bao phủ ngôn ngữ manh mối:**
+  - 6 mẫu cốt lõi: `FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST`.
+  - 2 phần mở rộng: `PARITY` (chẵn/lẻ) và `COMPARE_COUNT` (so sánh số lượng criminal giữa 2 vùng theo GT, LT, EQ).
+  - 4 loại vùng: `ROW`, `COL`, `NEIGHBORS` (8 hướng), `EXPLICIT` (danh sách ô tường minh, ví dụ đường chéo).
+- **Tiêu chuẩn chất lượng & Tiêu chí hoàn thành (DoD):**
+  - **100% Ground Truth Consistent:** Mọi manh mối trong tất cả các puzzle đều được kiểm tra đạt `evaluate_clue() == True` trên phép gán `hidden_status`.
+  - **100% Unique:** Toàn bộ 8 câu đố đều vượt qua kiểm tra tính duy nhất `LogicAgent().check_uniqueness() == "UNIQUE"` (chỉ có duy nhất 1 mô hình thỏa mãn trên các biến chính $C_i$).
+  - **100% No-Guess Solvable:** Tất cả các câu đố đều được giải trọn vẹn từ các thẻ mở ban đầu (`initial_revealed`) đến trạng thái `SOLVED` qua vòng lặp suy diễn của `LogicAgent` mà không cần đoán. Số bước suy diễn khớp chính xác bằng số ô chưa mở ($N^2 - |\text{initial\_revealed}|$).
+  - **Đặt tên chuẩn hóa:** Các nhân vật được đặt tên hiển thị theo thứ tự bảng chữ cái khớp với thứ tự duyệt ô row-major (A1 -> A, B1 -> B, ...) kèm nghề nghiệp và câu thuyết minh tự nhiên `text` cho GUI.

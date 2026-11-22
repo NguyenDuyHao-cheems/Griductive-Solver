@@ -1,0 +1,181 @@
+{
+  "puzzle_id": "puzzle_3x3_02",
+  "size": 3,
+  "initial_revealed": [
+    "B1",
+    "B3"
+  ],
+  "cells": [
+    {
+      "coord": "A1",
+      "row": 0,
+      "col": 0,
+      "name": "Alice",
+      "occupation": "Architect",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A1",
+        "type": "AT_LEAST",
+        "k": 2,
+        "text": "At least 2 criminals in column B.",
+        "region": {
+          "kind": "COL",
+          "target": "B"
+        }
+      }
+    },
+    {
+      "coord": "B1",
+      "row": 0,
+      "col": 1,
+      "name": "Bob",
+      "occupation": "Baker",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B1",
+        "type": "AT_MOST",
+        "k": 0,
+        "text": "At most 0 criminals in row 2.",
+        "region": {
+          "kind": "ROW",
+          "target": 1
+        }
+      }
+    },
+    {
+      "coord": "C1",
+      "row": 0,
+      "col": 2,
+      "name": "Charlie",
+      "occupation": "Chef",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C1",
+        "type": "PARITY",
+        "parity": "EVEN",
+        "text": "Bob (B1) has an even number of criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B1"
+        }
+      }
+    },
+    {
+      "coord": "A2",
+      "row": 1,
+      "col": 0,
+      "name": "Diana",
+      "occupation": "Doctor",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_A2",
+        "type": "DIFFERENT",
+        "a": "B1",
+        "b": "B2",
+        "text": "Bob (B1) and Eve (B2) have different statuses."
+      }
+    },
+    {
+      "coord": "B2",
+      "row": 1,
+      "col": 1,
+      "name": "Eve",
+      "occupation": "Engineer",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_B2",
+        "type": "PARITY",
+        "parity": "ODD",
+        "text": "An odd number of criminals in column C.",
+        "region": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "C2",
+      "row": 1,
+      "col": 2,
+      "name": "Frank",
+      "occupation": "Florist",
+      "hidden_status": "INNOCENT",
+      "clue": {
+        "clue_id": "clue_C2",
+        "type": "EXACTLY",
+        "k": 0,
+        "text": "Bob (B1) has exactly 0 criminal neighbors.",
+        "region": {
+          "kind": "NEIGHBORS",
+          "target": "B1"
+        }
+      }
+    },
+    {
+      "coord": "A3",
+      "row": 2,
+      "col": 0,
+      "name": "Grace",
+      "occupation": "Guard",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_A3",
+        "type": "COMPARE_COUNT",
+        "op": "EQ",
+        "text": "There are the same number of criminals as column C in column A.",
+        "r1": {
+          "kind": "COL",
+          "target": "A"
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "C"
+        }
+      }
+    },
+    {
+      "coord": "B3",
+      "row": 2,
+      "col": 1,
+      "name": "Henry",
+      "occupation": "Historian",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_B3",
+        "type": "COMPARE_COUNT",
+        "op": "LT",
+        "text": "There are fewer criminals than column B in column A.",
+        "r1": {
+          "kind": "COL",
+          "target": "A"
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "B"
+        }
+      }
+    },
+    {
+      "coord": "C3",
+      "row": 2,
+      "col": 2,
+      "name": "Ivy",
+      "occupation": "Inspector",
+      "hidden_status": "CRIMINAL",
+      "clue": {
+        "clue_id": "clue_C3",
+        "type": "COMPARE_COUNT",
+        "op": "LT",
+        "text": "There are fewer criminals than column A in row 2.",
+        "r1": {
+          "kind": "ROW",
+          "target": 1
+        },
+        "r2": {
+          "kind": "COL",
+          "target": "A"
+        }
+      }
+    }
+  ]
+}
