@@ -139,6 +139,13 @@ pytest src/tests
 pytest src/tests -v
 ```
 
+### Chạy benchmark thực nghiệm (Mục 4.5)
+Chạy agent trên toàn bộ bộ puzzle 3x3, 4x4, 5x5 trong `src/puzzles/` và xuất `benchmark_results.csv` ở thư mục gốc:
+```powershell
+python src/experiments/run_experiments.py
+```
+Tùy chọn: `--time-limit-ms 60000` (giới hạn mềm cho vòng suy diễn), `--hard-timeout 180` (giây; tiến trình con bị dừng nếu vượt), `--repeats 3` (`runtime_ms` là trung vị), `--output <csv>`. Ca `TIMEOUT`/`FAILED`/`UNKNOWN` vẫn được ghi vào CSV, không bị loại bỏ.
+
 ### Vẽ biểu đồ và bảng phân tích thực nghiệm
 Sau khi có tệp dữ liệu `benchmark_results.csv` từ bộ đo benchmark:
 ```powershell

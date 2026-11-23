@@ -28,6 +28,14 @@ python src/main.py
 
 Pass `--puzzle src/puzzles/sample_3x3.json` to open a sample puzzle directly on launch.
 
+## Running the Benchmark
+
+```powershell
+python src/experiments/run_experiments.py
+```
+
+Writes `benchmark_results.csv` (six Section 4.5 metric groups, one row per puzzle, failures/timeouts kept) to the repository root. See `--help` for the soft/hard timeout and repeat options.
+
 ## Generating Benchmark Charts
 
 Once `benchmark_results.csv` is produced:
