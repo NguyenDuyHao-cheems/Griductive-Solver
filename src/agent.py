@@ -175,6 +175,44 @@ class LogicAgent:
         report.runtime_ms = (perf_counter() - start) * 1000.0
         return report
 
+    def deduce_step(self, public_state: PublicState) -> DeductionStep | str | None:
+        """Perform a single forced deduction step on ``public_state`` without guessing.
+
+        Returns:
+            - ``DeductionStep`` if a cell's verdict is logically forced.
+            - ``"SOLVED"`` if all cells are already resolved.
+            - ``"INCONSISTENT"`` if KB_t is unsatisfiable.
+            - ``"UNKNOWN"`` if no unresolved cell has a forced verdict.
+        """
+        if not public_state.unsolved_coords:
+            return "SOLVED"
+
+        queries: list[str] = []
+        step_num = len(public_state.proved_verdicts) + 1
+
+        def record(coord: str, literal: int, result: SolverResult) -> None:
+            sign = "~" if literal < 0 else ""
+            queries.append(f"KB_{step_num} ^ {sign}C_{coord}: {result.status}")
+
+        status, coord = _first_forced(public_state, record)
+        if status in ("INCONSISTENT", "UNKNOWN"):
+            return status
+        if coord is None:
+            return None
+
+        return DeductionStep(
+            step=step_num,
+            active_clue_ids=[clue.clue_id for clue in public_state.revealed_clues],
+            sat_queries=queries,
+            sat_calls=len(queries),
+            target_coord=coord,
+            verdict=status,
+            newly_revealed_clue_id=None,
+        )
+
+    # Alias so AgentAdapter discovers step callable automatically
+    step = deduce_step
+
     # -- Task 5: hint --------------------------------------------------------
 
     def hint(self, public_state: PublicState) -> HintResponse:

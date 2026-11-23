@@ -6,29 +6,38 @@ Guidelines for AI coding agents and contributors working on Griductive-Solver (C
 
 Goal: Build a no-guess Griductive puzzle game and deductive solver using propositional logic, automatic CNF encoding, and a custom DPLL SAT solver.
 
-Tech Stack: Python 3.11+, GUI three.js, backend FastAPI, all code inside `src/`
+Tech Stack: Python 3.11+, Pygame desktop GUI (Khoa), shared game/logic modules inside `src/`.
 
-Documentation: Full Vietnamese specification and team task breakdown live in docs/Project 2 - Griductive Solver (Bản Việt hóa).md.
+Documentation: Full Vietnamese specification and team task breakdown live in `docs/Project2-Griductive-Solver.md`; Khoa's GUI and experiment status live in `docs/KHOA.md`.
 
 2. Repository Structure
 ```
 Griductive-Solver/
 ├── docs/
-│   └── Project 2 - Griductive Solver (Bản Việt hóa).md
+│   ├── ARCHITECTURE.md
+│   ├── HAO.md
+│   ├── KHOA.md
+│   └── Project2-Griductive-Solver.md
 ├── src/
-│   ├── main.py              # GUI entry point
+│   ├── main.py              # GUI entry point (Khoa)
 │   ├── models.py            # Shared schemas & resolve_region()
 │   ├── game_engine.py       # GameEngine & Direct Semantic Evaluator
 │   ├── encoder.py           # Variable map, validator & CNF encoder
 │   ├── dpll.py              # Pure-Python DPLL SAT solver & metrics
 │   ├── agent.py             # Deductive Logic Agent (entailment, loop, hint, uniqueness)
 │   ├── puzzles/             # 3x3, 4x4, 5x5 JSON puzzle files
-│   ├── experiments/         # Benchmark runner & plotting scripts
-│   ├── tests/               # Unit & integration tests
-│   ├── requirements.txt     # Exported from uv before submission
+│   ├── experiments/         # Benchmark runner (Bao) & CSV plotting plot_results.py (Khoa)
+│   ├── tests/               # Unit & integration tests (incl. test_ui.py, test_plot_results.py)
+│   ├── ui/                  # Pygame GUI controller, board view, agent adapter & helpers (Khoa)
+│   ├── assets/              # GUI character avatars (Khoa)
+│   ├── requirements.txt     # Python dependencies
 │   └── README.md
+├── assets/                  # Generated report charts (from plot_results.py)
+├── .agents/AGENTS.md        # Agent instructions
 ├── .gitignore
 ├── LICENSE
+├── REPORT.md
+├── requirements.txt
 └── README.md
 ```
 
