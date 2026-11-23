@@ -1,0 +1,9 @@
+puzzle_id,file,size,status,num_primary_vars,num_aux_vars,num_clauses,initial_clauses,full_kb_clauses,sat_calls,decisions,propagations,backtracks,deduction_steps,reveal_waves,runtime_ms,runtime_ms_min,runtime_ms_max,repeats,initial_revealed,uniqueness,solution_verified,notes
+puzzle_3x3_01,puzzle_3x3_01.json,3,SOLVED,9,36,149,41,170,20,10,403,0,7,3,3.633,3.341,3.887,3,2,UNIQUE,True,
+puzzle_3x3_02,puzzle_3x3_02.json,3,SOLVED,9,30,130,41,160,28,18,494,0,7,3,3.24,2.979,3.359,3,2,UNIQUE,True,
+sample_3x3,sample_3x3.json,3,SOLVED,9,17,77,18,116,38,12,503,0,7,6,2.17,2.153,2.568,3,2,UNIQUE,True,
+puzzle_4x4_01,puzzle_4x4_01.json,4,SOLVED,16,60,262,12,249,62,26,1732,0,14,2,10.444,9.982,11.367,3,2,UNIQUE,True,
+puzzle_4x4_02,puzzle_4x4_02.json,4,SOLVED,16,40,185,28,172,94,79,2284,0,14,5,10.796,10.421,10.927,3,2,UNIQUE,True,
+sample_4x4,sample_4x4.json,4,SOLVED,16,54,220,21,227,88,89,2932,0,14,6,10.268,9.687,10.884,3,2,UNIQUE,True,
+puzzle_5x5_01,puzzle_5x5_01.json,5,SOLVED,25,186,731,137,736,84,253,6014,3,22,4,44.969,43.727,45.358,3,3,UNIQUE,True,
+puzzle_5x5_02,puzzle_5x5_02.json,5,SOLVED,25,209,807,27,823,76,147,7067,1,22,4,52.731,52.091,54.399,3,3,UNIQUE,True,
