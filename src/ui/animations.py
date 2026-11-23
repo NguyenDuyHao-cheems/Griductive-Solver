@@ -9,8 +9,8 @@ class CardFlipAnimation:
     """Horizontal card flip used when a proved card reveals its clue.
 
     Call :meth:`update` once per frame and use :meth:`frame` to get the card
-    rectangle and whether the front face should be drawn. A duration of 0.34s
-    matches the reference GUI's reveal timing.
+    rectangle and whether the front face should be drawn. Default duration is
+    0.34s for a crisp card reveal feel.
     """
 
     def __init__(self, duration: float = 0.34) -> None:

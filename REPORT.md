@@ -223,16 +223,162 @@ Kết quả là SAT với 3 decisions, 4 propagations và 1 backtrack.
 
 5.1. Thiết lập thực nghiệm và Tập dữ liệu Puzzle (3×3, 4×4, 5×5)
 
+**Môi trường và quy trình đo đạc.** Toàn bộ thực nghiệm được chạy tự động bằng kịch bản `src/experiments/run_experiments.py` trên cùng một tập dữ liệu câu đố cho mọi phép so sánh, sau đó tổng hợp bảng và vẽ biểu đồ bằng `src/experiments/plot_results.py` (xuất kết quả vào thư mục `assets/`). Mỗi câu đố được thực thi thông qua đầy đủ dây chuyền `GameEngine` $\rightarrow$ `CNF Encoder` $\rightarrow$ `DPLLSolver` $\rightarrow$ `LogicAgent` với cấu hình:
+
+- **Lặp đo thời gian (`repeats = 3`):** mỗi puzzle được giải độc lập 3 lần; giá trị `runtime_ms` báo cáo là **trung vị (median)** của 3 lần chạy (kèm `runtime_ms_min` và `runtime_ms_max`), đồng thời kiểm tra chéo tính tất định của chữ ký suy diễn (`status`, `steps`, `sat_calls`, `decisions`, `propagations`, `backtracks`, chuỗi tọa độ và phán quyết) giữa các lần lặp.
+- **Cơ chế bảo vệ quá thời gian hai lớp (Timeout Guard):**
+  1. *Giới hạn mềm (`--time-limit-ms 60000`):* `LogicAgent.solve_puzzle(time_limit_ms=60000)` theo dõi ngân sách thời gian còn lại cho từng truy vấn DPLL; nếu vượt ngưỡng, bộ giải dừng và trả về trạng thái `TIMEOUT` cùng các chỉ số bán phần đã thu được.
+  2. *Giới hạn cứng (`--hard-timeout 180` giây):* mỗi puzzle chạy trong một tiến trình con cô lập (`multiprocessing` với ngữ cảnh `spawn`); nếu tiến trình vượt quá giới hạn tường thực, tiến trình bị ngắt và một dòng `TIMEOUT` vẫn được ghi nhận vào `benchmark_results.csv`.
+- **Định nghĩa nhất quán 6 nhóm chỉ số:**
+  1. *Biến chính và biến phụ:* `num_primary_vars` $= N^2$; `num_aux_vars` đo tại cơ sở tri thức $KB_t$ lớn nhất mà tác tử truy vấn (tức $KB$ ở bước quét cuối cùng trước khi giải xong hoặc khi dừng).
+  2. *Số mệnh đề CNF:* `num_clauses` của $KB_t$ lớn nhất (bao gồm cả các mệnh đề đơn của phán quyết đã chứng minh $\mathcal{V}_t$), ghi nhận kèm `initial_clauses` (tại $KB_0$) và `full_kb_clauses` (toàn bộ manh mối dùng khi kiểm tra tính duy nhất).
+  3. *Số lần gọi SAT (`sat_calls`):* tổng số truy vấn `DPLLSolver.solve` do `LogicAgent` thực hiện trong vòng lặp suy diễn (không tính các lần kiểm tra lại độc lập bên trong `GameEngine.submit_verdict`).
+  4. *Chỉ số tìm kiếm DPLL:* tổng `decisions`, `propagations`, `backtracks` tích lũy trên các truy vấn SAT của tác tử.
+  5. *Tiến trình suy diễn:* `deduction_steps` (số phán quyết bị bắt buộc được chấp nhận theo thứ tự row-major) và `reveal_waves` (số đợt tiết lộ song song khi lật đồng thời tất cả các ô bị bắt buộc ở mỗi vòng trên một bàn chơi độc lập).
+  6. *Thời gian chạy (`runtime_ms`):* trung vị thời gian suy diễn toàn bàn (mili giây) đo bằng `time.perf_counter()`.
+
+**Tập dữ liệu Puzzle kiểm thử.** Tập benchmark đặt tại `src/puzzles/` gồm **8 câu đố** trải đều ba kích thước (3×3, 4×4 và stress case 5×5), bao phủ đầy đủ 6 mẫu manh mối cốt lõi (`FACT`, `SAME`, `DIFFERENT`, `EXACTLY`, `AT_LEAST`, `AT_MOST`), 2 phần mở rộng (`PARITY`, `COMPARE_COUNT`) và 4 loại vùng (`ROW`, `COL`, `NEIGHBORS`, `EXPLICIT`). Toàn bộ 8 câu đố đều vượt qua kiểm tra `check_uniqueness() == "UNIQUE"` và được xác thực độc lập bằng `evaluate_puzzle()` trên lời giải gốc.
+
+| Puzzle | Kích thước | Thẻ mở đầu (`initial_revealed`) | Phân bố mẫu manh mối (Clue Types) | Phân bố vùng (Regions) | Nghiệm duy nhất |
+| :--- | :---: | :---: | :--- | :--- | :---: |
+| `sample_3x3` | 3×3 | 2 | `EXACTLY`(4), `FACT`(1), `SAME`(1), `DIFFERENT`(1), `AT_LEAST`(1), `AT_MOST`(1) | `COL`(3), `ROW`(1), `NEIGHBORS`(1), `EXPLICIT`(1) | `UNIQUE` |
+| `puzzle_3x3_01` | 3×3 | 2 | `COMPARE_COUNT`(3), `EXACTLY`(2), `DIFFERENT`(2), `PARITY`(2) | `ROW`(5), `COL`(2), `NEIGHBORS`(2), `EXPLICIT`(1) | `UNIQUE` |
+| `puzzle_3x3_02` | 3×3 | 2 | `COMPARE_COUNT`(3), `PARITY`(2), `EXACTLY`(1), `AT_LEAST`(1), `AT_MOST`(1), `DIFFERENT`(1) | `COL`(7), `ROW`(2), `NEIGHBORS`(2) | `UNIQUE` |
+| `sample_4x4` | 4×4 | 2 | `EXACTLY`(7), `FACT`(3), `SAME`(2), `DIFFERENT`(2), `AT_LEAST`(1), `AT_MOST`(1) | `ROW`(4), `COL`(3), `NEIGHBORS`(1), `EXPLICIT`(1) | `UNIQUE` |
+| `puzzle_4x4_01` | 4×4 | 2 | `EXACTLY`(4), `SAME`(4), `DIFFERENT`(3), `COMPARE_COUNT`(2), `PARITY`(2), `FACT`(1) | `COL`(5), `NEIGHBORS`(3), `ROW`(2) | `UNIQUE` |
+| `puzzle_4x4_02` | 4×4 | 2 | `SAME`(4), `DIFFERENT`(4), `EXACTLY`(3), `FACT`(1), `AT_LEAST`(1), `AT_MOST`(1), `PARITY`(1), `COMPARE_COUNT`(1) | `COL`(3), `NEIGHBORS`(3), `ROW`(2) | `UNIQUE` |
+| `puzzle_5x5_01` | 5×5 | 3 | `EXACTLY`(11), `PARITY`(4), `DIFFERENT`(4), `COMPARE_COUNT`(2), `FACT`(2), `SAME`(2) | `COL`(9), `ROW`(6), `NEIGHBORS`(3), `EXPLICIT`(1) | `UNIQUE` |
+| `puzzle_5x5_02` | 5×5 | 3 | `EXACTLY`(12), `DIFFERENT`(5), `PARITY`(3), `COMPARE_COUNT`(2), `AT_MOST`(2), `SAME`(1) | `COL`(9), `ROW`(7), `NEIGHBORS`(5) | `UNIQUE` |
+
 5.2. Bảng tổng hợp kết quả theo 6 nhóm chỉ số
+
+Kết quả chi tiết từ `benchmark_results.csv` (được tổng hợp tự động tại `assets/benchmark_summary.md`) cho từng puzzle và trung bình theo kích thước lưới được trình bày ở hai bảng dưới đây. Toàn bộ 8/8 câu đố đều đạt `status = SOLVED` và `solution_verified = True` (không phát sinh `TIMEOUT` hay `FAILED`).
+
+**Bảng 5.1: Kết quả chi tiết theo từng puzzle (đủ 6 nhóm chỉ số)**
+
+| Puzzle | Size | Status | Primary Vars | Aux Vars | Clauses ($KB_t$ max / $KB_0$ / Full) | SAT Calls | Decisions | Propagations | Backtracks | Steps | Waves | Runtime ms (Median [Min–Max]) |
+| :--- | :---: | :---: | ---: | ---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: | :---: |
+| `puzzle_3x3_01` | 3×3 | `SOLVED` | 9 | 36 | 149 / 41 / 170 | 20 | 10 | 403 | 0 | 7 | 3 | 3.63 [3.34–3.89] |
+| `puzzle_3x3_02` | 3×3 | `SOLVED` | 9 | 30 | 130 / 41 / 160 | 28 | 18 | 494 | 0 | 7 | 3 | 3.24 [2.98–3.36] |
+| `sample_3x3` | 3×3 | `SOLVED` | 9 | 17 | 77 / 18 / 116 | 38 | 12 | 503 | 0 | 7 | 6 | 2.17 [2.15–2.57] |
+| `puzzle_4x4_01` | 4×4 | `SOLVED` | 16 | 60 | 262 / 12 / 249 | 62 | 26 | 1,732 | 0 | 14 | 2 | 10.44 [9.98–11.37] |
+| `puzzle_4x4_02` | 4×4 | `SOLVED` | 16 | 40 | 185 / 28 / 172 | 94 | 79 | 2,284 | 0 | 14 | 5 | 10.80 [10.42–10.93] |
+| `sample_4x4` | 4×4 | `SOLVED` | 16 | 54 | 220 / 21 / 227 | 88 | 89 | 2,932 | 0 | 14 | 6 | 10.27 [9.69–10.88] |
+| `puzzle_5x5_01` | 5×5 | `SOLVED` | 25 | 186 | 731 / 137 / 736 | 84 | 253 | 6,014 | 3 | 22 | 4 | 44.97 [43.73–45.36] |
+| `puzzle_5x5_02` | 5×5 | `SOLVED` | 25 | 209 | 807 / 27 / 823 | 76 | 147 | 7,067 | 1 | 22 | 4 | 52.73 [52.09–54.40] |
+
+**Bảng 5.2: Tổng hợp trung bình theo kích thước lưới (trung bình chỉ tính trên nhóm `SOLVED`)**
+
+| Kích thước | Tổng | Solved | Timeout | Failed | TB Primary | TB Aux | TB Clauses | TB SAT Calls | TB Decisions | TB Propagations | TB Backtracks | TB Steps | TB Waves | TB Runtime (ms) |
+| :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **3×3** | 3 | 3 | 0 | 0 | 9.0 | 27.7 | 118.7 | 28.7 | 13.3 | 466.7 | 0.0 | 7.0 | 4.0 | 3.01 |
+| **4×4** | 3 | 3 | 0 | 0 | 16.0 | 51.3 | 222.3 | 81.3 | 64.7 | 2,316.0 | 0.0 | 14.0 | 4.3 | 10.50 |
+| **5×5** | 2 | 2 | 0 | 0 | 25.0 | 197.5 | 769.0 | 80.0 | 200.0 | 6,540.5 | 2.0 | 22.0 | 4.0 | 48.85 |
 
 5.3. Biểu đồ và Phân tích kết quả
 
+Bốn biểu đồ dưới đây được sinh tự động từ `benchmark_results.csv` bằng `src/experiments/plot_results.py` và lưu tại thư mục `assets/`:
+
+![Biểu đồ 1: Số lượng biến chính/phụ và mệnh đề CNF trên từng puzzle](assets/chart_1_cnf_size.png)
+
+![Biểu đồ 2: Số lần gọi SAT và các chỉ số tìm kiếm DPLL (Decisions, Propagations, Backtracks)](assets/chart_2_dpll_metrics.png)
+
+![Biểu đồ 3: Số bước suy diễn, đợt tiết lộ và thời gian chạy (ms)](assets/chart_3_deduction_runtime.png)
+
+![Biểu đồ 4: Tỉ lệ kết quả và xu hướng tăng chi phí theo kích thước lưới](assets/chart_4_size_scaling.png)
+
+Từ số liệu ở Bảng 5.1–5.2 và bốn biểu đồ trên, nhóm rút ra các nhận xét trọng tâm sau:
+
+1. **Quy mô mã hóa CNF tăng mạnh ở 5×5 và phụ thuộc rõ rệt vào loại manh mối (Biểu đồ 1):**
+   - Trong khi biến chính tăng đúng theo $N^2$ (`9` $\rightarrow$ `16` $\rightarrow$ `25`), số biến phụ tăng gấp **3.85 lần** từ 4×4 lên 5×5 (từ trung bình `51.3` lên `197.5`) và số mệnh đề tăng gấp **3.46 lần** (từ `222.3` lên `769.0`). Tại `puzzle_5x5_02`, số biến phụ (`209`) lớn gấp **8.36 lần** số biến chính (`25`), tạo ra `807` mệnh đề ở $KB_t$ lớn nhất (tăng gần 30 lần so với `27` mệnh đề ở $KB_0$).
+   - Nguyên nhân trực tiếp là độ phức tạp $O(m \cdot \ell)$ của bộ đếm tuần tự (sequential counter) cho `EXACTLY`/`AT_MOST`/`COMPARE_COUNT` và chuỗi biến trung gian XOR cho `PARITY`: ở lưới 5×5, mỗi vùng hàng/cột có $m = 5$ ô và vùng `NEIGHBORS` của ô bên trong lên tới $m = 8$ ô (`puzzle_5x5_02` có tới 12 `EXACTLY`, 2 `AT_MOST`, 2 `COMPARE_COUNT`, 3 `PARITY` và 5 vùng `NEIGHBORS`). Điều này cũng thấy rõ ngay trên cùng kích thước 3×3: `sample_3x3` (chỉ gồm 6 mẫu cốt lõi) chỉ cần `17` biến phụ và `77` mệnh đề, trong khi `puzzle_3x3_01` (có 3 `COMPARE_COUNT` và 2 `PARITY`) cần `36` biến phụ và `149` mệnh đề (gần gấp đôi).
+   - Ở `puzzle_4x4_01` và `puzzle_4x4_02`, `num_clauses` ở $KB_t$ lớn nhất (`262` và `185`) cao hơn nhẹ so với `full_kb_clauses` (`249` và `172`) do $KB_t$ cộng thêm các mệnh đề đơn của những phán quyết đã chứng minh $\mathcal{V}_t$, còn `full_kb_clauses` chỉ mã hóa tập manh mối phục vụ kiểm tra nghiệm duy nhất.
+
+2. **Lan truyền đơn vị (Unit Propagation) giải quyết phần lớn bài toán; quay lui rất thấp (Biểu đồ 2):**
+   - Trên cả 6 puzzle 3×3 và 4×4, DPLL đạt **0 backtracks** dù phải thực hiện trung bình `466.7` đến `2,316.0` propagations. Chỉ khi chuyển sang stress case 5×5, sự tương tác chéo giữa nhiều manh mối đếm/chẵn lẻ mới làm xuất hiện quay lui nhẹ (`3` lần ở `puzzle_5x5_01` và `1` lần ở `puzzle_5x5_02`).
+   - Tỉ lệ `Propagations / Decisions` duy trì ổn định rất cao ở mức **32.7:1 đến 35.8:1** trên cả ba kích thước lưới (vì vậy trên Biểu đồ 2 ở thang tuyến tính, cột `Backtracks` gần như sát trục hoành trong khi cột `Propagations` chiếm ưu thế áp đảo). Kết quả này khẳng định cơ sở tri thức của Griductive có cấu trúc ràng buộc chặt, phát huy tối đa hiệu quả của lan truyền đơn vị theo danh sách xuất hiện (occurrence list).
+
+3. **Số lần gọi SAT phụ thuộc vào cấu trúc lan truyền và thứ tự quét row-major, không tăng đơn điệu theo $N$ (Biểu đồ 2 & 4):**
+   - Trung bình `sat_calls` tăng mạnh từ `28.7` (3×3) lên `81.3` (4×4), nhưng ở 5×5 lại giữ ngang mức **`80.0`** (`84` và `76`), thậm chí thấp hơn đỉnh `94` của `puzzle_4x4_02`.
+   - Lý do là vòng lặp suy diễn quét các ô chưa giải theo thứ tự hàng–cột và dừng ngay khi gặp ô bị bắt buộc đầu tiên (mỗi ô quét tốn 2 truy vấn SAT). Trên `puzzle_5x5_02`, trung bình mỗi bước chỉ cần quét khoảng `1.73` ô (`76 / 22 = 3.45` SAT calls/bước) là đã tìm được phán quyết bị bắt buộc; ngược lại, trên `puzzle_4x4_02`, các ô bị bắt buộc thường nằm về phía sau trong thứ tự row-major nên phải quét trung bình `3.36` ô/bước (`94 / 14 = 6.71` SAT calls/bước).
+
+4. **Phân biệt rõ độ dài bước suy diễn (`deduction_steps`) và độ sâu logic (`reveal_waves`) (Biểu đồ 3):**
+   - Vì mọi câu đố đều giải trọn vẹn không đoán, số bước luôn bằng đúng số ô úp ban đầu: $N^2 - |\text{initial\_revealed}|$ (`7` bước cho 3×3, `14` bước cho 4×4, `22` bước cho 5×5).
+   - Ngược lại, `reveal_waves` phản ánh *độ sâu chuỗi phụ thuộc manh mối*: `puzzle_4x4_01` chỉ cần **2 đợt** (trung bình 7 ô bị bắt buộc mỗi đợt), hai màn 5×5 cần **4 đợt** (trung bình 5.5 ô/đợt), trong khi `sample_3x3` và `sample_4x4` cần tới **6 đợt** do các manh mối nối đuôi nhau tuần tự hơn.
+
+5. **Tăng trưởng thời gian chạy ở 5×5 chủ yếu đến từ chi phí mỗi truy vấn SAT (Biểu đồ 3 & 4):**
+   - Thời gian chạy trung bình tăng từ `3.01 ms` (3×3) lên `10.50 ms` (4×4, gấp **3.49×**) và vọt lên `48.85 ms` ở 5×5 (gấp **4.65×** so với 4×4 và **16.2×** so với 3×3; cao nhất là `puzzle_5x5_02` với `52.73 ms`).
+   - Dù tổng `sat_calls` của 5×5 (`80.0`) tương đương 4×4 (`81.3`), **chi phí trung bình mỗi lần gọi SAT tăng gần 4.7 lần** (từ $\approx 0.13\text{ ms/call}$ ở 4×4 lên $\approx 0.61\text{ ms/call}$ ở 5×5). Nguyên nhân là sự kết hợp của kích thước công thức CNF lớn hơn gấp 3.5 lần (`769` vs `222` mệnh đề), số biến phụ lớn hơn gần 4 lần, lượng `propagations` tăng gần 3 lần (`6,540.5` vs `2,316.0`), và việc mã hóa lại $KB_t$ qua 22 bước liên tiếp.
+   - Dù vậy, toàn bộ các màn 3×3–5×5 đều hoàn tất dưới **55 ms** (nhỏ hơn hơn 1,000 lần so với giới hạn mềm 60,000 ms), đảm bảo trải nghiệm tức thời trên giao diện GUI Pygame khi người chơi bấm xác nhận phán quyết, `Hint` hoặc `Auto Solve`.
+
 5.4. Các trường hợp thất bại, quá thời gian và Hạn chế (Failures, Timeouts & Limitations)
 
+**Báo cáo ca thất bại và quá thời gian.** Trên tập benchmark 8 câu đố chính thức (`benchmark_results.csv`), tỷ lệ giải thành công là **8/8 (100%)**, ghi nhận **0 ca `TIMEOUT`**, **0 ca `FAILED`**, **0 ca `UNKNOWN`** và **0 ca `INCONSISTENT`**. Các lần chạy lặp lại đều cho chữ ký suy diễn đồng nhất và lời giải khớp 100% với bộ đánh giá ngữ nghĩa trực tiếp.
+
+Để tuân thủ chặt chẽ nguyên tắc *báo cáo thay vì loại bỏ các ca thất bại/quá thời gian*, toàn bộ pipeline thực nghiệm được thiết kế và kiểm thử đơn vị chuyên biệt cho các kịch bản lỗi:
+
+- Trong `src/experiments/run_experiments.py` và `src/tests/test_run_experiments.py`: đã kiểm thử cả giới hạn mềm (`test_soft_timeout_row_is_kept`), giới hạn cứng ngắt tiến trình con (`test_hard_timeout_kills_worker`) và câu đố lỗi định dạng (`test_invalid_puzzle_becomes_failed_row`) — mọi trường hợp đều được ghi thành một dòng đầy đủ vào CSV cùng lý do tại cột `notes`.
+- Trong `src/experiments/plot_results.py` và `src/tests/test_plot_results.py`: script giữ nguyên mọi dòng `TIMEOUT`, `FAILED`, `UNKNOWN` và cả `MISSING_STATUS` trong bảng chi tiết, tách riêng mục *Failure & Timeout Cases*, chỉ tính trung bình hiệu năng trên nhóm `SOLVED` (không tính ca lỗi vào trung bình thành công) và hiển thị các số đo bị thiếu bằng `-` (bảng) hoặc khoảng trống `NaN` (biểu đồ) thay vì vẽ thành `0`.
+
+**Hạn chế của hệ thống và hướng cải thiện.**
+
+1. **Giới hạn mở rộng của DPLL cơ bản (không có CDCL và heuristic chọn biến):** Như đã phân tích ở Mục 4.1, DPLL quay lui theo thứ tự thời gian chưa có học mệnh đề xung đột (CDCL), không có watched literals và chọn biến cố định theo ID nhỏ nhất. Với lưới 3×3–5×5 có cấu trúc ràng buộc cục bộ chặt, thời gian dưới 55 ms là rất nhanh; tuy nhiên, khi mở rộng lên lưới lớn hơn ($\ge 6 \times 6$) hoặc các câu đố ít ràng buộc đơn lẻ kết hợp dày đặc `PARITY`/`COMPARE_COUNT`, cây tìm kiếm có nguy cơ tăng theo hàm mũ và chạm ngưỡng timeout (tương tự thực nghiệm 3-SAT ngẫu nhiên 150 biến mất ~145 giây ở Mục 4.1).
+2. **Mã hóa lại $KB_t$ ở mỗi bước (chưa incremental):** Mỗi khi một thẻ mới được lật, hệ thống gọi lại `encode_public_state()` và khởi tạo `DPLLSolver` mới từ đầu. Với lưới 5×5 gồm 22 bước và gần 800 mệnh đề, việc xây lại danh sách xuất hiện lặp đi lặp lại góp phần làm tăng chi phí mỗi truy vấn SAT. Cài đặt SAT solver dạng tăng dần (incremental clause addition) có thể giảm đáng kể chi phí này.
+3. **Chi phí biến phụ lớn với vùng rộng và manh mối mở rộng:** Mã hóa bộ đếm tuần tự và phép so sánh `COMPARE_COUNT` tạo số lượng biến phụ gấp ~8 lần biến chính ở lưới 5×5 (đặc biệt trên vùng `NEIGHBORS` 8 ô). Ngoài ra, `encode_public_state()` mã hóa độc lập từng manh mối nên chưa tái sử dụng chung các biến ngưỡng khi hai manh mối cùng tham chiếu một vùng.
+4. **Chiến lược quét row-major và độ tối ưu của `Hint`:** Quét cố định theo thứ tự hàng–cột đảm bảo tính tất định nhưng có thể phát sinh nhiều truy vấn `UNKNOWN` dư thừa khi các ô bị bắt buộc nằm gần cuối lưới (như `puzzle_4x4_02` cần 94 lần gọi SAT). Bên cạnh đó, hàm `hint()` rút gọn tham lam cho ra một tập manh mối tối thiểu theo nghĩa không lược bỏ thêm được (irreducible), phụ thuộc thứ tự lật thẻ, chưa đảm bảo là tập ít manh mối nhất toàn cục (minimum-cardinality MUS).
+5. **Quy mô bộ dữ liệu và khả năng hiển thị GUI:** Bộ benchmark hiện gồm 8 câu đố chuẩn (đều có nghiệm duy nhất và giải được hoàn toàn không đoán); chưa có bộ câu đố thực tế cỡ lớn hơn (6×6+) hoặc tập câu đố mơ hồ/mâu thuẫn quy mô lớn trong CSV chính thức (các ca này hiện được phủ ở bộ unit test tự động 569 test). Giao diện Pygame được bố cục tối ưu cho lưới 3×3–5×5; với lưới lớn hơn sẽ cần bổ sung cơ chế thu phóng hoặc tách khung xem chi tiết thẻ.
+
 6. Video minh họa (Demonstration Video)
+
+- **Đường dẫn Google Drive (chế độ *Anyone with the link can view*):** `[TODO: Khoa dán đường dẫn Google Drive đã kiểm tra bằng cửa sổ ẩn danh trước khi xuất Report.pdf — không nộp link YouTube]`
+- **Thời lượng dự kiến:** 5–10 phút (có thuyết minh/phụ đề tiếng Việt).
+- **Nội dung minh họa theo yêu cầu Mục 4.7:**
+  1. *Giao diện đồ họa (Graphical Interface):* giới thiệu tổng quan giao diện Pygame Desktop GUI (`python src/main.py`), màn chọn puzzle từ `src/puzzles/`, hiển thị lưới 3×3–5×5, tọa độ hàng/cột, avatar, tên/nghề nghiệp nhân vật, thẻ úp/ngửa, bảng `Revealed Clues` và bảng `Deduction Trace`.
+  2. *Trình bày tính năng (Feature Presentation):*
+     - Chơi thủ công trên puzzle mẫu: chọn ô gán `CRIMINAL`/`INNOCENT`, minh họa rõ trường hợp được chấp nhận (`ENTAILED` kèm hiệu ứng lật thẻ `CardFlipAnimation` và lộ manh mối mới) và các trường hợp bị từ chối (`NOT_PROVABLE`, `CONTRADICTED`) mà không làm lộ thông tin ẩn.
+     - Chọn manh mối đã mở để tô sáng vùng tham chiếu (`ROW`, `COL`, `NEIGHBORS`, `EXPLICIT`) và dùng nút `Hint` để tô sáng cả nhân vật gợi ý lẫn tập manh mối liên quan (`relevant_clue_ids`).
+     - Dùng nút `Restart`, `Load` đổi sang puzzle 4×4 và 5×5, chạy chế độ `Auto Solve` từng bước tự động cập nhật thẻ lật và hiển thị đầy đủ vết suy diễn `DeductionStep`.
+
+**Hình ảnh minh họa giao diện đồ họa Pygame Desktop GUI (lưu tại `assets/`):**
+
+![Hình 6.1: Giao diện chơi thủ công trên sample_4x4 với chức năng Hint tô sáng ô gợi ý B1 và manh mối liên quan clue_A1, clue_C2](assets/gui_1_manual_hint.png)
+
+![Hình 6.2: Giao diện đang chạy Auto Solve trên sample_4x4 (13/16 thẻ đã lật, nút Stop đang hoạt động, tô sáng ô tham chiếu D2 và ghi vết Deduction Trace)](assets/gui_2_autosolve_trace.png)
+
+![Hình 6.3: Bố cục co giãn trên stress case 5×5 (puzzle_5x5_01) giải hoàn tất 25/25 ô trong 22 bước suy diễn không đoán](assets/gui_3_board_5x5_solved.png)
 
 7. Tài liệu tham khảo và Phụ lục (References and Appendix)
 
 7.1. Tài liệu tham khảo (References)
 
+1. Khoa Công nghệ Thông tin, Trường Đại học Khoa học Tự nhiên — ĐHQG-HCM (2026). *CSC14003 — Introduction to Artificial Intelligence: Project 2 — Griductive Solver* (Đặc tả bài tập và yêu cầu chấm điểm, lưu tại `docs/Project2-Griductive-Solver.md`).
+2. Davis, M., & Putnam, H. (1960). *A Computing Procedure for Quantification Theory*. Journal of the ACM, 7(3), 201–215.
+3. Davis, M., Logemann, G., & Loveland, D. (1962). *A Machine Program for Theorem-Proving*. Communications of the ACM, 5(7), 394–397. (Nền tảng giải thuật DPLL trong `src/dpll.py`).
+4. Sinz, C. (2005). *Towards an Optimal CNF Encoding of Boolean Cardinality Constraints*. In *Principles and Practice of Constraint Programming (CP 2005)*, LNCS vol. 3709, pp. 827–831, Springer. (Cơ sở cho phương pháp mã hóa ngưỡng tuần tự trong `src/encoder.py`).
+5. Russell, S., & Norvig, P. (2020). *Artificial Intelligence: A Modern Approach* (4th ed.), Chapter 7: *Logical Agents*. Pearson. (Cơ sở lý thuyết về logic mệnh đề, hệ quả logic — entailment, phản chứng SAT và suy diễn trên cơ sở tri thức).
+6. Tài nguyên đồ họa nhân vật (GUI Avatars): bộ 50 chân dung nhân vật tại `src/assets/sprites/avatars/` được nhóm tự tạo mới hoàn toàn bằng script sinh đồ họa thủ tục `src/assets/generate_avatars.py` (Python + Pillow, chi tiết tại `src/assets/README.md`), không sử dụng hình ảnh bên thứ ba chưa cấp phép.
+7. Tài liệu chính thức các công cụ và thư viện Python được sử dụng:
+   - Python 3.11+ Documentation: `https://docs.python.org/3/`
+   - Pygame Documentation: `https://www.pygame.org/docs/`
+   - Pillow (PIL Fork) Documentation: `https://pillow.readthedocs.io/`
+   - Matplotlib Documentation: `https://matplotlib.org/stable/`
+   - Pytest Documentation: `https://docs.pytest.org/`
+
 7.2. Phụ lục: Sử dụng Generative AI (LLMs) và Các Prompt tiêu biểu
+
+Trong quá trình thực hiện đồ án, nhóm sử dụng có kiểm soát các công cụ Generative AI / AI coding assistants (như ChatGPT, Claude, Gemini / Antigravity) như trợ lý lập trình và rà soát kỹ thuật. Nhóm tuân thủ các nguyên tắc sử dụng minh bạch sau:
+
+- **Vai trò của AI:** hỗ trợ phác thảo kiến trúc phân tầng, sinh khung mã nguồn tầng trình bày GUI Pygame, gợi ý ca kiểm thử biên (edge cases), viết script vẽ biểu đồ từ CSV và rà soát nhất quán tài liệu Markdown.
+- **Kiểm soát và thẩm định của sinh viên:** toàn bộ hợp đồng dữ liệu (`src/models.py`), logic mã hóa CNF (`src/encoder.py`), thuật toán DPLL thuần Python (`src/dpll.py`), tác tử suy diễn (`src/agent.py`), tập dữ liệu câu đố và phân tích thực nghiệm đều do thành viên phụ trách trực tiếp thiết kế, đối chiếu toán học và xác thực bằng bộ **569 ca kiểm thử tự động** (`pytest src/tests`) cùng nguồn chân lý độc lập (`evaluate_clue`, brute-force oracle). Tuyệt đối không dùng thư viện SAT ngoài trong mã nguồn thực thi.
+
+**Bảng 7.1: Tổng hợp một số nhóm prompt tiêu biểu đã sử dụng**
+
+| Thành viên / Giai đoạn | Mục đích sử dụng | Prompt tiêu biểu (tóm lược) | Cách kiểm chứng và chỉnh sửa của nhóm |
+| :--- | :--- | :--- | :--- |
+| **Thiết kế kiến trúc chung** | Rà soát ranh giới `PublicState` và schema `models.py` | *"Hãy kiểm tra ranh giới ẩn thông tin giữa GameEngine, LogicAgent và GUI cho bài toán Griductive no-guess; đề xuất dataclass dùng chung để tránh trùng lặp logic tọa độ vùng."* | Nhóm tự chốt `src/models.py` với `resolve_region()` duy nhất và viết test ẩn thông tin trong `test_game_engine.py`. |
+| **Mã hóa CNF & DPLL** | Kiểm tra công thức biên và thiết kế ca kiểm thử đối chiếu | *"Đề xuất các test case biên cho bộ mã hóa cardinality ($k=0$, $k=|R|$, `PARITY`, `COMPARE_COUNT`) và bộ test đối chiếu DPLL với brute-force oracle trên CNF ngẫu nhiên."* | Đối chiếu bảng chân trị toàn phần trên 512 phép gán 3×3 (`test_encoder.py`) và 200 công thức ngẫu nhiên (`test_dpll.py`). |
+| **Tác tử Logic & Bộ Puzzle** | Kiểm tra trường hợp biên của `Hint`, `Uniqueness` và xác thực puzzle | *"Thiết kế bộ test cho `LogicAgent` gồm các trạng thái `CRIMINAL`, `INNOCENT`, `UNKNOWN`, `INCONSISTENT`, `TIMEOUT` và kiểm tra tính tối thiểu của `relevant_clue_ids`."* | Xác thực độc lập bằng `evaluate_clue` trong `test_agent.py` (184 tests) và verify 100% `UNIQUE` cho cả 8 puzzle. |
+| **Khoa — GUI Pygame & `AgentAdapter`** | Xây dựng giao diện 3×3–5×5 chỉ đọc `PublicState` và tách rời `LogicAgent` | *"Hãy đọc các tài liệu trên dự án và viết phần code công việc của Khoa: GUI Pygame hiển thị `PublicState`, highlight qua `GameEngine.get_clue_highlight_cells()`, hiệu ứng lật thẻ `CardFlipAnimation`, cô lập `LogicAgent` sau `AgentAdapter` không đọc dữ liệu ẩn."* | Rà soát static audit không truy cập `hidden_status`/`get_solution_for_testing()`, chạy headless Pygame tests trên 3×3–5×5 trong `test_ui.py` và kiểm thử thực tế với `LogicAgent`. |
+| **Khoa — Script biểu đồ & Báo cáo thực nghiệm** | Xuất bảng/biểu đồ đủ 6 nhóm chỉ số, giữ failure/timeout và viết phân tích Mục 5 & 7 | *"Viết `src/experiments/plot_results.py` đọc `benchmark_results.csv`, xuất bảng Markdown và 4 biểu đồ vào `assets/`, giữ nguyên ca `TIMEOUT`/`FAILED`/`MISSING_STATUS` và không vẽ giá trị thiếu thành 0; sau đó viết phần báo cáo Mục 5–7 trong `REPORT.md` đúng quy định phân công."* | Chạy trực tiếp trên `benchmark_results.csv` thật, đối chiếu thủ công từng con số giữa CSV, bảng báo cáo và 4 hình PNG trong `assets/`, giữ nguyên tiêu đề và phần nội dung của các thành viên khác. |
+
+*(Lưu ý: Các thành viên Hào, Tuân, Bảo, Tuấn có thể bổ sung thêm các prompt chi tiết riêng trong quá trình hoàn thiện bản PDF cuối cùng nếu cần.)*
