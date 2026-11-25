@@ -104,7 +104,6 @@ Các thư viện chính bao gồm:
 - `pygame`: giao diện đồ họa desktop GUI, rendering và quản lý animation.
 - `matplotlib`: trực quan hóa biểu đồ phân tích thực nghiệm benchmark.
 - `pytest`: thực thi bộ kiểm thử tự động.
-- `pydantic`, `fastapi`, `uvicorn`: chuẩn hóa cấu trúc dữ liệu và tích hợp API.
 
 ## Hướng dẫn sử dụng và khởi chạy
 
