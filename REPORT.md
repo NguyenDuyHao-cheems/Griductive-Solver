@@ -4,46 +4,140 @@ CSC14003 — Introduction to Artificial Intelligence: Project 2 — Griductive S
 
 1.1. Tổng quan kế hoạch và Lộ trình thực hiện
 
-Dự án được thực hiện bởi nhóm 5 sinh viên. Toàn bộ quá trình triển khai chia làm ba giai đoạn liên tiếp:
+Dự án được thực hiện bởi nhóm 5 sinh viên với toàn bộ quá trình triển khai chia làm 3 giai đoạn liên tiếp từ ngày 18/11/2026 đến 28/11/2026:
 
-- **Giai đoạn 1 (18/11 – 22/11): Thiết kế kiến trúc và cài đặt các module độc lập.**
-  - Ngày 19/11: Hoàn thiện `src/models.py`, xác định các cấu trúc dữ liệu dùng chung (`Puzzle`, `Clue`, `PublicState`, `CNFFormula`, `SolverResult`, `VerdictResponse`, `HintResponse`, `DeductionStep`) cùng hàm chuẩn hóa vùng `resolve_region()`.
-  - Ngày 20/11: Xây dựng tập dữ liệu kiểm thử khói gồm 2 puzzle mẫu (`sample_3x3.json`, `sample_4x4.json`); hoàn thành bảng ánh xạ biến tất định và bộ kiểm tra tính hợp lệ của manh mối (`src/encoder.py`).
-  - Ngày 21/11: Cài đặt và kiểm thử bộ giải DPLL SAT Solver thuần Python (`src/dpll.py`).
-  - Ngày 22/11: Hoàn tất Game Engine, bộ thẩm định ngữ nghĩa trực tiếp (`src/game_engine.py`) và bộ mã hóa CNF tự động (`src/encoder.py`).
+| Giai đoạn | Ngày | Nội dung thực hiện |
+| :--- | :--- | :--- |
+| **Giai đoạn 1**<br>(18/11 – 22/11)<br>*Thiết kế kiến trúc và cài đặt các module độc lập* | 19/11 | Hoàn thiện `src/models.py`, xác định các cấu trúc dữ liệu dùng chung (`Puzzle`, `Clue`, `PublicState`, `CNFFormula`, `SolverResult`, `VerdictResponse`, `HintResponse`, `DeductionStep`) cùng hàm chuẩn hóa vùng `resolve_region()`. |
+| | 20/11 | Xây dựng tập dữ liệu kiểm thử khói gồm 2 puzzle mẫu (`sample_3x3.json`, `sample_4x4.json`); hoàn thành bảng ánh xạ biến tất định và bộ kiểm tra tính hợp lệ của manh mối (`src/encoder.py`). |
+| | 21/11 | Cài đặt và kiểm thử bộ giải DPLL SAT Solver thuần Python (`src/dpll.py`). |
+| | 22/11 | Hoàn tất Game Engine, bộ thẩm định ngữ nghĩa trực tiếp (`src/game_engine.py`) và bộ mã hóa CNF tự động (`src/encoder.py`). |
+| **Giai đoạn 2**<br>(23/11 – 25/11)<br>*Tích hợp tác tử logic, xây dựng dữ liệu benchmark và giao diện* | 23/11 | Cài đặt thuật toán phân loại hệ quả logic và hàm kiểm tra tính duy nhất của nghiệm (`check_uniqueness`) trong `src/agent.py`; dựng khung giao diện đồ họa GUI trong `src/main.py`. |
+| | 24/11 | Hoàn thiện vòng lặp suy diễn không đoán, cơ chế sinh gợi ý và xuất vết suy diễn; thẩm định tập dữ liệu câu đố benchmark kích thước 3x3, 4x4 và 5x5 đảm bảo mỗi câu đố có nghiệm duy nhất. |
+| | 25/11 | Tích hợp toàn diện giao diện với Game Engine và Agent; hỗ trợ thao tác gán phán quyết thủ công, tô sáng vùng manh mối và chế độ giải tự động; chạy kiểm thử tích hợp toàn hệ thống. |
+| **Giai đoạn 3**<br>(26/11 – 28/11)<br>*Thực nghiệm, đánh giá và đóng gói* | 26/11 | Chạy benchmark tự động trên toàn bộ tập dữ liệu, xuất bảng số liệu 6 nhóm chỉ số ra tập tin CSV. |
+| | 27/11 | Lập biểu đồ trực quan hóa dữ liệu thực nghiệm, hoàn thiện các phần nội dung của báo cáo kỹ thuật và ghi hình video minh họa chức năng hệ thống. |
+| | 28/11 | Rà soát toàn bộ mã nguồn trên môi trường thực thi sạch, hoàn thiện tài liệu hướng dẫn và đóng gói nộp bài. |
 
-- **Giai đoạn 2 (23/11 – 25/11): Tích hợp tác tử logic, xây dựng dữ liệu benchmark và giao diện.**
-  - Ngày 23/11: Cài đặt thuật toán phân loại hệ quả logic và hàm kiểm tra tính duy nhất của nghiệm (`check_uniqueness`) trong `src/agent.py`; dựng khung giao diện đồ họa GUI trong `src/main.py`.
-  - Ngày 24/11: Hoàn thiện vòng lặp suy diễn không đoán, cơ chế sinh gợi ý và xuất vết suy diễn; thẩm định tập dữ liệu câu đố benchmark kích thước 3x3, 4x4 và 5x5 đảm bảo mỗi câu đố có nghiệm duy nhất.
-  - Ngày 25/11: Tích hợp toàn diện giao diện với Game Engine và Agent; hỗ trợ thao tác gán phán quyết thủ công, tô sáng vùng manh mối và chế độ giải tự động; chạy kiểm thử tích hợp toàn hệ thống.
+1.2. Bảng phân công công việc và Tỷ lệ hoàn thành của từng thành viên
 
-- **Giai đoạn 3 (26/11 – 28/11): Thực nghiệm, đánh giá và đóng gói.**
-  - Ngày 26/11: Chạy benchmark tự động trên toàn bộ tập dữ liệu, xuất bảng số liệu 6 nhóm chỉ số ra tập tin CSV.
-  - Ngày 27/11: Lập biểu đồ trực quan hóa dữ liệu thực nghiệm, hoàn thiện các phần nội dung của báo cáo kỹ thuật và ghi hình video minh họa chức năng hệ thống.
-  - Ngày 28/11: Rà soát toàn bộ mã nguồn trên môi trường thực thi sạch, hoàn thiện tài liệu hướng dẫn và đóng gói nộp bài.
+| Thành viên | MSSV | Trách nhiệm chính | Sản phẩm bàn giao | Tỷ lệ hoàn thành |
+| :--- | :---: | :--- | :--- | :---: |
+| **Nguyễn Duy Hào** | 24120306 | Quản lý schema dùng chung, Game Engine, Direct Semantic Evaluator, tập dữ liệu puzzle (3x3, 4x4, 5x5), đóng gói dự án. | `src/models.py`, `src/game_engine.py`, `src/puzzles/*.json`, mục 1 và 2 báo cáo, `README.md`. | 100% |
+| **Bùi Đặng Khả Tuân** | 24120236 | Ánh xạ biến tất định, bộ kiểm tra tính hợp lệ của manh mối, bộ mã hóa CNF tự động (6 mẫu cốt lõi và 2 mở rộng). | `src/encoder.py`, `src/tests/test_encoder.py`, mục 3 báo cáo. | 100% |
+| **Đinh Sỹ Bảo** | 24120262 | Bộ giải DPLL SAT Solver thuần Python, hỗ trợ giả định, ghi nhận metrics, xây dựng kịch bản benchmark tự động. | `src/dpll.py`, `src/tests/test_dpll.py`, `src/experiments/run_experiments.py`, mục 4.1 báo cáo. | 100% |
+| **Nguyễn Đình Tuấn** | 24120237 | Tác tử suy diễn logic, phân loại hệ quả logic, kiểm tra nghiệm duy nhất, vòng lặp suy diễn không đoán, tạo vết suy diễn và gợi ý. | `src/agent.py`, `src/tests/test_agent.py`, mục 4.2 đến 4.4 báo cáo. | 100% |
+| **Nguyễn Minh Khoa** | 24120073 | Giao diện đồ họa người dùng, tương tác bàn cờ, trực quan hóa manh mối, tổng hợp biểu đồ thực nghiệm, ghi hình video demo. | `src/main.py`, `src/experiments/plot_results.py`, mục 5 báo cáo, video demo minh họa. | 100% |
 
-1.2. Kiến trúc hệ thống và Giao diện giữa các module
+1.3. Kiến trúc hệ thống và Giao diện giữa các module
 
-Hệ thống được tổ chức theo kiến trúc phân tầng rõ ràng, đặt toàn bộ mã nguồn thực thi bên trong thư mục `src/`. Các module giao tiếp với nhau thông qua hợp đồng dữ liệu tại `src/models.py`:
+Hệ thống được tổ chức theo kiến trúc phân tầng rõ ràng, đặt toàn bộ mã nguồn thực thi bên trong thư mục `src/`. Tất cả các module giao tiếp với nhau thông qua hợp đồng dữ liệu chuẩn hóa tại `src/models.py`.
 
-- **Lớp dữ liệu dùng chung (`src/models.py`):** Nơi định nghĩa duy nhất cho các dataclass trao đổi giữa các tầng và hàm `resolve_region()`. Việc tập trung logic phân giải tọa độ vùng (hàng, cột, lân cận, danh sách tường minh) tại một vị trí giúp loại bỏ nguy cơ lệch tọa độ giữa Game Engine, Encoder và giao diện hiển thị.
-- **Tầng quản lý trò chơi (`src/game_engine.py`):** Lớp `GameEngine` nắm giữ câu đố gốc, trạng thái ẩn của nhân vật (`hidden_status`) và các manh mối chưa mở. Module thực hiện nguyên tắc ẩn giấu thông tin nghiêm ngặt: hàm `get_public_state()` chỉ xuất bản sao trạng thái công khai (`PublicState`) gồm các manh mối đã lật và phán quyết đã chứng minh. Hàm `evaluate_clue()` kiểm tra trực tiếp chân trị của manh mối trên một phép gán hoàn chỉnh mà không qua biểu diễn CNF, đóng vai trò nguồn kiểm chứng độc lập cho bộ mã hóa.
-- **Tầng mã hóa logic (`src/encoder.py`):** Cung cấp các hàm ánh xạ biến tất định, kiểm tra ràng buộc tham số manh mối và chuyển đổi các mẫu manh mối sang dạng chuẩn hội CNF. Bộ mã hóa tổng hợp các manh mối đã mở và phán quyết đã biết thành cơ sở tri thức $KB_t$.
-- **Tầng giải SAT (`src/dpll.py`):** Cài đặt thuật toán DPLL thuần Python, nhận công thức CNF và danh sách giả định tạm thời để kiểm tra tính thỏa được mà không thay đổi cấu trúc $KB_t$ gốc, đồng thời đo lường các chỉ số quyết định, lan truyền đơn vị, quay lui và thời gian tính toán.
-- **Tầng tác tử suy diễn (`src/agent.py`):** Lớp `DeductiveLogicAgent` tiếp nhận `PublicState`, điều phối các truy vấn SAT qua bộ mã hóa và bộ giải DPLL để phân loại trạng thái logic của từng ô, thực hiện vòng lặp suy diễn không đoán, xuất vết suy diễn chi tiết và cung cấp gợi ý nước đi tiếp theo.
-- **Tầng giao diện người dùng (`src/main.py`):** Cung cấp giao diện trực quan hiển thị lưới ô cờ, xử lý các thao tác tải câu đố, khởi động lại, nhận phán quyết từ người chơi, tô sáng các ô liên quan khi chọn manh mối và hiển thị tiến trình tự động giải.
+```mermaid
+flowchart TB
+    %% 1. PRESENTATION LAYER
+    subgraph PRESENTATION ["1. Tầng giao diện người dùng (Presentation Layer)"]
+        UI["Pygame Desktop GUI (src/main.py, src/ui/)<br/>- Giao diện bàn cờ N×N & Thẻ nhân vật<br/>- Bộ điều khiển: Load, Restart, Hint, Auto Solve<br/>- Tô sáng vùng manh mối & Hiển thị vết suy diễn"]:::presStyle
+    end
 
-Kiến trúc bảo đảm nguyên tắc ẩn giấu thông tin: Tác tử logic và giao diện người dùng không thể truy cập trạng thái bí mật hay các manh mối chưa mở. Khi người chơi gửi một phán quyết chưa đủ điều kiện chứng minh từ tri thức hiện tại, Game Engine từ chối phán quyết và giữ nguyên trạng thái bàn cờ.
+    %% 2. GAME MANAGEMENT LAYER
+    subgraph GAME_CORE ["2. Tầng quản lý trò chơi (Game Management Layer)"]
+        GE["GameEngine (src/game_engine.py)<br/>- Quản lý Puzzle & hidden_status<br/>- Cổng lọc an toàn: get_public_state()<br/>- Tiếp nhận phán quyết & cập nhật thẻ lật"]:::gameStyle
+        DSE["Direct Semantic Evaluator<br/>- Hàm evaluate_clue(clue, assignment)<br/>- Oracle kiểm chứng chéo độc lập không qua CNF"]:::gameStyle
+    end
 
-1.3. Bảng phân công công việc và Tỷ lệ hoàn thành của từng thành viên
+    %% 3. REASONING LAYER
+    subgraph REASONING ["3. Tầng tác tử suy diễn logic (Reasoning Layer)"]
+        AGENT["DeductiveLogicAgent (src/agent.py)<br/>- Vòng lặp suy diễn không đoán (No-Guess Loop)<br/>- Phân loại Entailment qua chứng minh phản chứng<br/>- Kiểm tra nghiệm duy nhất & Đề xuất gợi ý"]:::agentStyle
+    end
 
-| Thành viên | Trách nhiệm chính | Sản phẩm bàn giao | Tỷ lệ hoàn thành |
-| :--- | :--- | :--- | :---: |
-| **Hào** | Quản lý schema dùng chung, Game Engine, Direct Semantic Evaluator, tập dữ liệu puzzle (3x3, 4x4, 5x5), đóng gói dự án. | `src/models.py`, `src/game_engine.py`, `src/puzzles/*.json`, mục 1 và 2 báo cáo, `README.md`. | 100% |
-| **Tuân** | Ánh xạ biến tất định, bộ kiểm tra tính hợp lệ của manh mối, bộ mã hóa CNF tự động (6 mẫu cốt lõi và 2 mở rộng). | `src/encoder.py`, `src/tests/test_encoder.py`, mục 3 báo cáo. | 100% |
-| **Bảo** | Bộ giải DPLL SAT Solver thuần Python, hỗ trợ giả định, ghi nhận metrics, xây dựng kịch bản benchmark tự động. | `src/dpll.py`, `src/tests/test_dpll.py`, `src/experiments/run_experiments.py`, mục 4.1 báo cáo. | 100% |
-| **Tuấn** | Tác tử suy diễn logic, phân loại hệ quả logic, kiểm tra nghiệm duy nhất, vòng lặp suy diễn không đoán, tạo vết suy diễn và gợi ý. | `src/agent.py`, `src/tests/test_agent.py`, mục 4.2 đến 4.4 báo cáo. | 100% |
-| **Khoa** | Giao diện đồ họa người dùng, tương tác bàn cờ, trực quan hóa manh mối, tổng hợp biểu đồ thực nghiệm, ghi hình video demo. | `src/main.py`, `src/experiments/plot_results.py`, mục 5 báo cáo, video demo minh họa. | 100% |
+    %% 4. LOGIC & SAT ENGINE
+    subgraph SAT_CORE ["4. Tầng logic mệnh đề & Giải SAT (Logic & SAT Engine)"]
+        ENC["CNF Encoder & Validator (src/encoder.py)<br/>- Variable Map tất định (C_i và biến phụ)<br/>- Kiểm tra tham số & vùng manh mối<br/>- Mã hóa tự động 6 mẫu cốt lõi + 2 mở rộng"]:::satStyle
+        DPLL["DPLL SAT Solver (src/dpll.py)<br/>- Thuật toán DPLL thuần Python không thư viện ngoài<br/>- Hỗ trợ Assumptions tạm thời mà không sửa KB gốc<br/>- Thu thập Metrics: Decisions, Props, Backtracks, Time"]:::satStyle
+    end
+
+    %% 5. BENCHMARK LAYER
+    subgraph BENCHMARK ["5. Tầng thực nghiệm & Đánh giá (Benchmark Layer)"]
+        EXP["Experiment Runner & Plotter (src/experiments/)<br/>- run_experiments.py: Tự động chạy benchmark 3x3, 4x4, 5x5<br/>- plot_results.py: Phân tích kết quả CSV & Xuất biểu đồ"]:::expStyle
+    end
+
+    %% 6. SHARED DATA CONTRACT
+    subgraph DATA_SCHEMA ["6. Lớp dữ liệu dùng chung (Shared Data Contract)"]
+        MODELS["Single Source of Truth (src/models.py)<br/>- Shared Dataclasses: Puzzle, Clue, PublicState, CNFFormula, SolverResult, VerdictResponse<br/>- Chuẩn hóa phân giải vùng: resolve_region()"]:::modelStyle
+    end
+
+    %% RUNTIME DATA FLOWS
+    UI -->|"1. Thao tác: Gửi phán quyết / Gợi ý / Tự động giải"| GE
+    GE -->|"2. PublicState an toàn (chỉ chứa thẻ đã lật)"| UI
+
+    GE -->|"3. Gửi PublicState để thẩm định logic"| AGENT
+    AGENT -->|"4. Trả về VerdictResponse / HintResponse"| GE
+    GE -->|"5. Kiểm chứng chéo phép gán hoàn chỉnh"| DSE
+
+    AGENT -->|"6. Yêu cầu mã hóa PublicState / Clue set"| ENC
+    ENC -->|"7. Trả về CNFFormula (clauses + var_map)"| AGENT
+
+    AGENT -->|"8. Truy vấn SAT với giả định tạm thời (+/-C_i)"| DPLL
+    DPLL -->|"9. Trả về SolverResult (SAT/UNSAT + Metrics)"| AGENT
+
+    EXP -->|"Tự động kích hoạt ván chơi"| GE
+    EXP -->|"Thu thập vết suy diễn & metrics"| AGENT
+
+    %% STATIC DEPENDENCIES
+    UI -.->|"Phân giải tọa độ highlight qua resolve_region()"| MODELS
+    GE -.->|"import schemas"| MODELS
+    AGENT -.->|"import schemas"| MODELS
+    ENC -.->|"import schemas & resolve_region"| MODELS
+    DPLL -.->|"import schemas"| MODELS
+
+    %% COLOR STYLES
+    classDef presStyle fill:#E1F5FE,stroke:#0288D1,stroke-width:2px;
+    classDef gameStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px;
+    classDef agentStyle fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px;
+    classDef satStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:2px;
+    classDef expStyle fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px;
+    classDef modelStyle fill:#ECEFF1,stroke:#455A64,stroke-width:2px;
+```
+
+**Chú giải sơ đồ (Diagram Legend):**
+- **Luồng dữ liệu thời gian thực (Mũi tên nét liền `-->`):** Biểu diễn các lời gọi phương thức và luồng trao đổi dữ liệu giữa các module trong quá trình thực thi, được đánh số từ 1 đến 9 theo thứ tự tương tác.
+- **Quan hệ phụ thuộc tĩnh (Mũi tên nét đứt `-.->`):** Thể hiện các module import và sử dụng chung các cấu trúc dữ liệu (`dataclass`) hoặc hàm chuẩn hóa vùng `resolve_region()` từ hạt nhân `src/models.py`.
+- **Quy ước màu sắc (Color Coding):**
+  - *Xanh lam nhạt:* Tầng giao diện người dùng (Presentation Layer).
+  - *Xanh lá nhạt:* Tầng quản trị trò chơi & Thẩm định ngữ nghĩa trực tiếp (Game Management Layer).
+  - *Tím nhạt:* Tầng tác tử suy diễn logic không đoán (Reasoning Layer).
+  - *Cam nhạt:* Tầng mã hóa mệnh đề CNF & Bộ giải SAT DPLL (Logic & SAT Engine).
+  - *Đỏ nhạt:* Tầng chạy thực nghiệm tự động & Vẽ biểu đồ (Benchmark Layer).
+  - *Xám nhạt:* Hạt nhân dữ liệu dùng chung - Single Source of Truth (`src/models.py`).
+
+**Giải thích chi tiết kiến trúc và luồng dữ liệu:**
+
+1. **Lớp dữ liệu dùng chung (`src/models.py` - Single Source of Truth):**
+   - Đóng vai trò hạt nhân dữ liệu cho toàn bộ hệ thống, định nghĩa duy nhất các lớp dữ liệu trao đổi giữa các tầng: `Puzzle`, `Clue`, `PublicState`, `CNFFormula`, `SolverResult`, `VerdictResponse`, `HintResponse`, `DeductionStep`.
+   - Cung cấp hàm `resolve_region(region, size)` chuẩn hóa việc phân giải tọa độ cho tất cả các loại vùng (`ROW`, `COL`, `NEIGHBORS`, `EXPLICIT`), đảm bảo tính nhất quán tuyệt đối giữa Game Engine, Bộ mã hóa CNF và Tầng giao diện người dùng (tô sáng vùng).
+
+2. **Tầng quản lý trò chơi (`src/game_engine.py`):**
+   - Lớp `GameEngine` nắm giữ toàn bộ trạng thái gốc của bàn cờ, bao gồm danh tính bí mật của nhân vật (`hidden_status`) và các manh mối úp chưa được tiết lộ.
+   - **Nguyên tắc ẩn giấu thông tin nghiêm ngặt (Strict Information Hiding):** Phương thức `get_public_state()` chỉ xuất bản sao `PublicState` gồm các manh mối đã lật và phán quyết đã chứng minh; tuyệt đối không tiết lộ thông tin ẩn cho Logic Agent hay GUI.
+   - **Direct Semantic Evaluator (`evaluate_clue`):** Cung cấp cơ chế thẩm định trực tiếp giá trị chân lý của một manh mối trên một phép gán hoàn chỉnh hoàn toàn độc lập với việc mã hóa CNF, đóng vai trò oracle đối chiếu chéo tính đúng đắn của bộ mã hóa.
+
+3. **Tầng tác tử suy diễn logic (`src/agent.py`):**
+   - Lớp `DeductiveLogicAgent` chỉ tiếp nhận `PublicState` từ Game Engine.
+   - Thực hiện phương pháp phản chứng thông qua truy vấn SAT để phân loại trạng thái logic của từng ô (`CRIMINAL`, `INNOCENT`, `UNKNOWN`, `INCONSISTENT`).
+   - Điều phối **Vòng lặp suy diễn không đoán (No-Guess Deduction Loop)**, kiểm tra tính duy nhất của nghiệm bài toán (`check_uniqueness`), tạo danh sách vết suy diễn chi tiết (`DeductionStep`) và sinh gợi ý nước đi (`HintResponse`).
+
+4. **Tầng mã hóa logic và Giải SAT (`src/encoder.py`, `src/dpll.py`):**
+   - **CNF Encoder (`src/encoder.py`):** Thiết lập ánh xạ biến tất định theo thứ tự quét hàng, tách biệt biến chính $C_i$ (từ $1$ đến $N^2$) và biến phụ (từ $N^2+1$ trở đi); thẩm định hợp lệ tham số manh mối; chuyển đổi tự động 6 mẫu manh mối cốt lõi và 2 mẫu mở rộng thành công thức chuẩn hội `CNFFormula`.
+   - **DPLL SAT Solver (`src/dpll.py`):** Bộ giải DPLL tự cài đặt thuần Python (không phụ thuộc thư viện ngoài), hỗ trợ cơ chế giả định tạm thời (assumptions) để kiểm tra $KB_t \land C_i$ và $KB_t \land \neg C_i$ mà không làm biến dạng công thức gốc, đồng thời đo lường chính xác 4 chỉ số hiệu năng (`decisions`, `propagations`, `backtracks`, `runtime_ms`).
+
+5. **Tầng giao diện người dùng (`src/main.py`, `src/ui/`):**
+   - Ứng dụng đồ họa Pygame (`GriductiveApp`) tương tác với Game Engine qua `AgentAdapter`.
+   - Hiển thị trực quan lưới ô cờ $N \times N$, phân biệt thẻ úp/ngửa, tô sáng các ô thuộc vùng manh mối được chọn thông qua `resolve_region()`, hỗ trợ người chơi gán phán quyết thủ công, nhận phản hồi trạng thái (`NOT_PROVABLE`, `CONTRADICTED`), yêu cầu gợi ý (`Hint`) và chế độ tự động giải (`Auto Solve`) kèm hiển thị vết suy diễn từng bước.
+
+6. **Tầng thực nghiệm và đánh giá (`src/experiments/`):**
+   - Module `run_experiments.py` tự động hóa việc chạy kiểm thử và benchmark bộ giải trên toàn bộ tập dữ liệu câu đố kích thước 3×3, 4×4 và 5×5, ghi nhận đầy đủ 6 nhóm chỉ số thực nghiệm ra tệp CSV.
+   - Module `plot_results.py` xử lý dữ liệu CSV để vẽ biểu đồ phân tích hiệu năng và độ phức tạp tính toán của thuật toán.
 
 2. Phát biểu bài toán (Problem Formulation)
 

@@ -297,16 +297,12 @@ class GameEngine:
         return {coord: cell.hidden_status for coord, cell in self._cell_map.items()}
 
     def _query_agent(self, public_state: PublicState, coord: str) -> EntailmentStatus:
-        """Query attached logic agent with flexible dispatch."""
+        """Query attached logic agent via ``classify_cell(public_state, coord)``."""
         if hasattr(self._agent, "classify_cell") and callable(self._agent.classify_cell):
             status = self._agent.classify_cell(public_state, coord)
-        elif hasattr(self._agent, "check_entailment") and callable(self._agent.check_entailment):
-            status = self._agent.check_entailment(public_state, coord)
-        elif callable(self._agent):
-            status = self._agent(public_state, coord)
         else:
             raise TypeError(
-                f"Attached agent {self._agent!r} must implement classify_cell(public_state, coord) or be callable."
+                f"Attached agent {self._agent!r} must implement classify_cell(public_state, coord)."
             )
 
         if status not in ("CRIMINAL", "INNOCENT", "UNKNOWN", "INCONSISTENT"):

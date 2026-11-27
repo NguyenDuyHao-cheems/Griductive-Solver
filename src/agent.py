@@ -197,9 +197,6 @@ class LogicAgent:
             return status
         return step_obj
 
-    # Alias so AgentAdapter discovers step callable automatically
-    step = deduce_step
-
     # -- Task 5: hint --------------------------------------------------------
 
     def hint(self, public_state: PublicState) -> HintResponse:
@@ -250,7 +247,7 @@ def _deduce_one_step(
         queries.append(f"KB_{step_num} ^ {sign}C_{coord}: {result.status}")
 
     status, coord = _first_forced(state, record, deadline)
-    if status not in ("CRIMINAL", "INNOCENT") or coord is None:
+    if status not in ("CRIMINAL", "INNOCENT"):
         return status, None
 
     return status, DeductionStep(
