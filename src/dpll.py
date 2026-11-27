@@ -43,7 +43,12 @@ class SolverTimeout(RuntimeError):
     """Raised when a solve call exceeds its ``time_limit_ms``.
 
     ``partial`` carries the metrics collected before the limit was hit, so a
-    benchmark can still report the failed case instead of discarding it.
+    benchmark can still report the failed case instead of discarding it. Its
+    ``status`` is ``"TIMEOUT"``: an interrupted search proves neither SAT nor
+    UNSAT.
+
+    The limit is soft: the deadline is checked at the start of each recursive
+    DPLL call, not inside unit propagation, so a call may overrun it slightly.
     """
 
     def __init__(self, partial: SolverResult) -> None:
@@ -327,7 +332,7 @@ class _Search:
         if self._deadline is not None and perf_counter() > self._deadline:
             raise SolverTimeout(
                 SolverResult(
-                    status="UNSAT",
+                    status="TIMEOUT",
                     assignment=None,
                     decisions=self._decisions,
                     propagations=self._propagations,

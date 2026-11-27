@@ -343,6 +343,8 @@ def test_time_limit_raises_with_partial_metrics() -> None:
         solve(clauses, num_vars=num_vars, time_limit_ms=0.0)
     partial = info.value.partial
     assert isinstance(partial, SolverResult)
+    assert partial.status == "TIMEOUT"  # interrupted search is neither SAT nor UNSAT
+    assert partial.assignment is None
     assert_metrics_valid(partial)
 
 
