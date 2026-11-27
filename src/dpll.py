@@ -126,9 +126,12 @@ class DPLLSolver:
         """Decide satisfiability of the formula under the given assumptions.
 
         ``assumptions`` are signed literals (``+v`` = True, ``-v`` = False)
-        treated exactly like temporary unit clauses: they are assigned before
-        search and counted as propagations, so ``solve([l])`` reports the same
-        metrics as solving the formula with an extra unit clause ``[l]``.
+        assigned at level 0 before search and counted as propagations. Logically
+        ``solve([l])`` is the same as solving the formula with an extra unit
+        clause ``[l]``: same status, assignment, decisions and backtracks.
+        ``propagations`` may differ, because assumptions are enqueued before
+        the formula's own unit clauses, and when a branch hits a conflict the
+        number of literals assigned before it is detected depends on that order.
         """
         assumption_list = [_check_literal(lit) for lit in assumptions]
         if time_limit_ms is not None and time_limit_ms < 0:
