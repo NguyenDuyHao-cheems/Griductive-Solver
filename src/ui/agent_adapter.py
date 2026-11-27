@@ -123,7 +123,12 @@ class AgentAdapter:
             )
         return result
 
-    def run_auto_solve_step(self, engine: GameEngine) -> AutoSolveStepResult:
+    def run_auto_solve_step(
+        self,
+        engine: GameEngine,
+        *,
+        step_num: int | None = None,
+    ) -> AutoSolveStepResult:
         """Execute a single no-guess deduction step via the attached LogicAgent.
 
         Calls the agent with ``PublicState`` only. If the step returns a
@@ -142,9 +147,14 @@ class AgentAdapter:
                 message="Auto Solve chua san sang: LogicAgent chua cai dat API step.",
             )
 
+        resolved_step = (
+            step_num
+            if step_num is not None
+            else max(1, engine.revealed_count - engine.initial_revealed_count + 1)
+        )
         public_state = engine.get_public_state()
         try:
-            raw_result = self._invoke_step_callable(step_fn, public_state)
+            raw_result = self._invoke_step_callable(step_fn, public_state, step_num=resolved_step)
         except Exception as exc:
             return AutoSolveStepResult(status="ERROR", message=f"Loi khi chay Auto Solve: {exc}")
 
@@ -242,6 +252,18 @@ class AgentAdapter:
         self,
         step_fn: Any,
         public_state: PublicState,
+        *,
+        step_num: int | None = None,
     ) -> Any:
         """Invoke the Agent using the public knowledge state only."""
+        if step_num is not None:
+            try:
+                params = inspect.signature(step_fn).parameters
+                accepts_step_num = "step_num" in params or any(
+                    param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()
+                )
+            except (TypeError, ValueError):
+                accepts_step_num = False
+            if accepts_step_num:
+                return step_fn(public_state, step_num=step_num)
         return step_fn(public_state)

@@ -373,3 +373,54 @@ def test_hint_matches_semantic_oracle(seed):
         assert (hint.hint_coord, hint.verdict) == (coord, status)
     else:
         assert hint.hint_coord is None and hint.verdict is None and hint.relevant_clue_ids == []
+
+
+@pytest.mark.parametrize("path", PUZZLES[:4], ids=lambda p: p.stem)
+def test_deduce_step_numbering_matches_solve_puzzle(path):
+    """C3 regression: deduce_step must use 1-based step numbering identical to solve_puzzle."""
+    agent = LogicAgent()
+    full_report = agent.solve_puzzle(GameEngine(path, agent=agent))
+
+    step_engine = GameEngine(path, agent=agent)
+    step_trace = []
+    while not step_engine.is_solved():
+        step_num = len(step_trace) + 1
+        step = agent.deduce_step(step_engine.get_public_state(), step_num=step_num)
+        assert not isinstance(step, str)
+        resp = step_engine.submit_verdict(step.target_coord, step.verdict)
+        assert resp.accepted
+        step_trace.append((
+            step.step,
+            step.active_clue_ids,
+            step.sat_queries,
+            step.sat_calls,
+            step.target_coord,
+            step.verdict,
+            resp.revealed_clue.clue_id if resp.revealed_clue else None,
+        ))
+
+    expected = [
+        (
+            s.step,
+            s.active_clue_ids,
+            s.sat_queries,
+            s.sat_calls,
+            s.target_coord,
+            s.verdict,
+            s.newly_revealed_clue_id,
+        )
+        for s in full_report.steps
+    ]
+    assert step_trace == expected
+
+
+def test_deduce_step_defaults_to_step_1_and_validates_step_num():
+    agent = LogicAgent()
+    engine = GameEngine(PUZZLES[0], agent=agent)
+    first = agent.deduce_step(engine.get_public_state())
+    assert not isinstance(first, str)
+    assert first.step == 1
+    assert all(q.startswith("KB_1 ^ ") for q in first.sat_queries)
+
+    with pytest.raises(ValueError, match="step_num"):
+        agent.deduce_step(engine.get_public_state(), step_num=0)
