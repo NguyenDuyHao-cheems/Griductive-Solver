@@ -42,7 +42,7 @@ except ImportError:
 
 
 class MockFullAgent:
-    """Test-only mock agent supporting verdict classification, Hint, and step Auto Solve."""
+    """Test-only mock agent supporting verdict classification, Hint, and deduce_step Auto Solve."""
 
     def __init__(
         self,
@@ -51,19 +51,19 @@ class MockFullAgent:
         steps: list[DeductionStep | str | None] | None = None,
     ) -> None:
         self.verdicts = verdicts or {}
-        self.hint = hint
+        self._hint = hint
         self.steps = list(steps or [])
         self._step_idx = 0
 
     def classify_cell(self, public_state: PublicState, coord: str) -> EntailmentStatus:
         return self.verdicts.get(coord, "UNKNOWN")
 
-    def get_hint(self, public_state: PublicState) -> HintResponse:
-        if self.hint is not None:
-            return self.hint
+    def hint(self, public_state: PublicState) -> HintResponse:
+        if self._hint is not None:
+            return self._hint
         return HintResponse(hint_coord=None, verdict=None, relevant_clue_ids=[])
 
-    def step(self, public_state: PublicState):
+    def deduce_step(self, public_state: PublicState):
         if self._step_idx >= len(self.steps):
             return None
         item = self.steps[self._step_idx]

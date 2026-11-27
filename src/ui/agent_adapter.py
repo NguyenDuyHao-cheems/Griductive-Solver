@@ -1,19 +1,18 @@
 """Thin adapter isolating GUI calls to LogicAgent.
 
 Follows the project's strict information-hiding and non-fabrication rules:
-- Never guesses or fakes LogicAgent reasoning when src/agent.py is unimplemented.
 - Never inspects hidden_status, PuzzleCell, or get_solution_for_testing().
 - Exposes explicit capability flags so the GUI disables Agent-dependent actions
-  (verdict verification, Hint, Auto Solve) until a real LogicAgent is available.
+  (verdict verification, Hint, Auto Solve) when no LogicAgent is attached.
 """
 
 from __future__ import annotations
 
-import importlib
 import inspect
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from agent import LogicAgent
 from game_engine import GameEngine
 from models import DeductionStep, HintResponse, PublicState, VerdictResponse
 
@@ -31,40 +30,16 @@ class AutoSolveStepResult:
     message: str = ""
 
 
-def discover_default_agent() -> tuple[Any | None, str]:
-    """Attempt to import and instantiate LogicAgent from ``src/agent.py``.
-
-    Returns ``(agent_instance, status_message)``. If ``src/agent.py`` is empty
-    or does not expose a usable agent class yet, returns ``(None, reason)``.
-    """
-    try:
-        agent_module = importlib.import_module("agent")
-    except Exception as exc:
-        return None, f"Khong the nap src/agent.py: {exc}"
-
-    for attr_name in ("LogicAgent", "DeductiveLogicAgent", "Agent"):
-        candidate = getattr(agent_module, attr_name, None)
-        if inspect.isclass(candidate):
-            try:
-                instance = candidate()
-            except TypeError as exc:
-                return None, f"LogicAgent ({attr_name}) can tham so khoi tao: {exc}"
-            except Exception as exc:
-                return None, f"Loi khoi tao {attr_name}: {exc}"
-            return instance, f"Da ket noi {attr_name} tu src/agent.py."
-
-    return None, "LogicAgent chua san sang (src/agent.py chua co implementation)."
-
-
 class AgentAdapter:
-    """Adapter between the GUI and an optional LogicAgent implementation."""
+    """Adapter between the GUI and a LogicAgent implementation."""
 
     def __init__(self, agent: Any | None = None, *, auto_discover: bool = True) -> None:
         if agent is not None:
             self._agent: Any | None = agent
             self._status_message = f"Da ket noi {type(agent).__name__}."
         elif auto_discover:
-            self._agent, self._status_message = discover_default_agent()
+            self._agent = LogicAgent()
+            self._status_message = "Da ket noi LogicAgent tu src/agent.py."
         else:
             self._agent = None
             self._status_message = "LogicAgent chua duoc gan."
@@ -80,13 +55,7 @@ class AgentAdapter:
     @property
     def can_verify_verdict(self) -> bool:
         """True if the agent satisfies GameEngine's entailment check interface."""
-        if self._agent is None:
-            return False
-        return (
-            callable(getattr(self._agent, "classify_cell", None))
-            or callable(getattr(self._agent, "check_entailment", None))
-            or callable(self._agent)
-        )
+        return self._agent is not None and callable(getattr(self._agent, "classify_cell", None))
 
     @property
     def can_hint(self) -> bool:
@@ -114,7 +83,7 @@ class AgentAdapter:
         """Request a HintResponse derived strictly from ``public_state``."""
         hint_fn = self._resolve_hint_callable()
         if hint_fn is None:
-            raise RuntimeError("Hint chua san sang: LogicAgent chua cai dat API get_hint().")
+            raise RuntimeError("Hint chua san sang: LogicAgent chua cai dat API hint().")
 
         result = hint_fn(public_state)
         if not isinstance(result, HintResponse):
@@ -144,7 +113,7 @@ class AgentAdapter:
         if step_fn is None:
             return AutoSolveStepResult(
                 status="UNAVAILABLE",
-                message="Auto Solve chua san sang: LogicAgent chua cai dat API step.",
+                message="Auto Solve chua san sang: LogicAgent chua cai dat API deduce_step.",
             )
 
         resolved_step = (
@@ -233,20 +202,14 @@ class AgentAdapter:
     def _resolve_hint_callable(self) -> Any | None:
         if self._agent is None:
             return None
-        for name in ("get_hint", "hint", "suggest_hint"):
-            fn = getattr(self._agent, name, None)
-            if callable(fn):
-                return fn
-        return None
+        fn = getattr(self._agent, "hint", None)
+        return fn if callable(fn) else None
 
     def _resolve_step_callable(self) -> Any | None:
         if self._agent is None:
             return None
-        for name in ("step", "deduce_step", "solve_step", "next_step"):
-            fn = getattr(self._agent, name, None)
-            if callable(fn):
-                return fn
-        return None
+        fn = getattr(self._agent, "deduce_step", None)
+        return fn if callable(fn) else None
 
     def _invoke_step_callable(
         self,
