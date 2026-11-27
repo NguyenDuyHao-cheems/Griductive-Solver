@@ -336,8 +336,8 @@ Từ số liệu ở Bảng 5.1–5.2 và bốn biểu đồ trên, nhóm rút r
 
 6. Video minh họa (Demonstration Video)
 
-- **Đường dẫn Google Drive (chế độ *Anyone with the link can view*):** `[TODO: Khoa dán đường dẫn Google Drive đã kiểm tra bằng cửa sổ ẩn danh trước khi xuất Report.pdf — không nộp link YouTube]`
-- **Thời lượng dự kiến:** 5–10 phút (có thuyết minh/phụ đề tiếng Việt).
+- **Đường dẫn Google Drive (chế độ *Anyone with the link can view*):** https://drive.google.com/drive/folders/1XI_SsF4HxRR-YOpJc3XCyBbvK0xfxXU6
+- **Thời lượng:** 7 phút 53 giây (có thuyết minh và phụ đề tiếng Việt).
 - **Nội dung minh họa theo yêu cầu Mục 4.7:**
   1. *Giao diện đồ họa (Graphical Interface):* giới thiệu tổng quan giao diện Pygame Desktop GUI (`python src/main.py`), màn chọn puzzle từ `src/puzzles/`, hiển thị lưới 3×3–5×5, tọa độ hàng/cột, avatar, tên/nghề nghiệp nhân vật, thẻ úp/ngửa, bảng `Revealed Clues` và bảng `Deduction Trace`.
   2. *Trình bày tính năng (Feature Presentation):*

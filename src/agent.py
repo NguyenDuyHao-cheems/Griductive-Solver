@@ -138,45 +138,50 @@ class LogicAgent:
         try:
             while True:
                 state = engine.get_public_state()
-                if not state.unsolved_coords:
+                step_num = len(report.steps) + 1
+                status, step_obj = _deduce_one_step(
+                    state,
+                    step_num=step_num,
+                    on_result=report._add,
+                    deadline=deadline,
+                )
+                if status == "SOLVED":
                     report.status = "SOLVED"
                     break
-
-                step = len(report.steps) + 1
-                queries: list[str] = []
-
-                def record(coord: str, literal: int, result: SolverResult) -> None:
-                    report._add(result)
-                    sign = "~" if literal < 0 else ""
-                    queries.append(f"KB_{step} ^ {sign}C_{coord}: {result.status}")
-
-                status, coord = _first_forced(state, record, deadline)
-                if status not in ("CRIMINAL", "INNOCENT"):
+                if step_obj is None:
                     report.status = status
                     break
 
-                response = engine.submit_verdict(coord, status)
+                response = engine.submit_verdict(step_obj.target_coord, step_obj.verdict)
                 if not response.accepted:
                     raise RuntimeError(
-                        f"GameEngine rejected entailed verdict {status} for {coord}: {response.reason}."
+                        f"GameEngine rejected entailed verdict {step_obj.verdict} "
+                        f"for {step_obj.target_coord}: {response.reason}."
                     )
-                report.steps.append(DeductionStep(
-                    step=step,
-                    active_clue_ids=[clue.clue_id for clue in state.revealed_clues],
-                    sat_queries=queries,
-                    sat_calls=len(queries),
-                    target_coord=coord,
-                    verdict=status,
-                    newly_revealed_clue_id=response.revealed_clue.clue_id if response.revealed_clue else None,
-                ))
+                report.steps.append(
+                    replace(
+                        step_obj,
+                        newly_revealed_clue_id=(
+                            response.revealed_clue.clue_id if response.revealed_clue else None
+                        ),
+                    )
+                )
         except SolverTimeout as timeout:
             report._add(timeout.partial)
             report.status = "TIMEOUT"
         report.runtime_ms = (perf_counter() - start) * 1000.0
         return report
 
-    def deduce_step(self, public_state: PublicState) -> DeductionStep | str | None:
+    def deduce_step(
+        self,
+        public_state: PublicState,
+        *,
+        step_num: int = 1,
+    ) -> DeductionStep | str:
         """Perform a single forced deduction step on ``public_state`` without guessing.
+
+        Uses the same single-step deduction core and 1-based ``step_num`` /
+        ``KB_{step_num}`` labeling as :meth:`solve_puzzle`.
 
         Returns:
             - ``DeductionStep`` if a cell's verdict is logically forced.
@@ -184,31 +189,13 @@ class LogicAgent:
             - ``"INCONSISTENT"`` if KB_t is unsatisfiable.
             - ``"UNKNOWN"`` if no unresolved cell has a forced verdict.
         """
-        if not public_state.unsolved_coords:
-            return "SOLVED"
+        if step_num < 1:
+            raise ValueError(f"step_num must be >= 1, got {step_num}.")
 
-        queries: list[str] = []
-        step_num = len(public_state.proved_verdicts) + 1
-
-        def record(coord: str, literal: int, result: SolverResult) -> None:
-            sign = "~" if literal < 0 else ""
-            queries.append(f"KB_{step_num} ^ {sign}C_{coord}: {result.status}")
-
-        status, coord = _first_forced(public_state, record)
-        if status in ("INCONSISTENT", "UNKNOWN"):
+        status, step_obj = _deduce_one_step(public_state, step_num=step_num)
+        if step_obj is None:
             return status
-        if coord is None:
-            return None
-
-        return DeductionStep(
-            step=step_num,
-            active_clue_ids=[clue.clue_id for clue in public_state.revealed_clues],
-            sat_queries=queries,
-            sat_calls=len(queries),
-            target_coord=coord,
-            verdict=status,
-            newly_revealed_clue_id=None,
-        )
+        return step_obj
 
     # Alias so AgentAdapter discovers step callable automatically
     step = deduce_step
@@ -237,6 +224,44 @@ class LogicAgent:
                 kept = trial
         return HintResponse(hint_coord=coord, verdict=status,
                             relevant_clue_ids=[clue.clue_id for clue in kept])
+
+
+def _deduce_one_step(
+    state: PublicState,
+    *,
+    step_num: int,
+    on_result: Callable[[SolverResult], None] | None = None,
+    deadline: float | None = None,
+) -> tuple[Literal["SOLVED", "UNKNOWN", "INCONSISTENT", "CRIMINAL", "INNOCENT"], DeductionStep | None]:
+    """Run one deterministic no-guess deduction scan on ``state``.
+
+    Shared by both :meth:`LogicAgent.solve_puzzle` and :meth:`LogicAgent.deduce_step`
+    so step numbers and ``KB_{step_num}`` SAT query labels are always identical.
+    """
+    if not state.unsolved_coords:
+        return "SOLVED", None
+
+    queries: list[str] = []
+
+    def record(coord: str, literal: int, result: SolverResult) -> None:
+        if on_result is not None:
+            on_result(result)
+        sign = "~" if literal < 0 else ""
+        queries.append(f"KB_{step_num} ^ {sign}C_{coord}: {result.status}")
+
+    status, coord = _first_forced(state, record, deadline)
+    if status not in ("CRIMINAL", "INNOCENT") or coord is None:
+        return status, None
+
+    return status, DeductionStep(
+        step=step_num,
+        active_clue_ids=[clue.clue_id for clue in state.revealed_clues],
+        sat_queries=queries,
+        sat_calls=len(queries),
+        target_coord=coord,
+        verdict=status,
+        newly_revealed_clue_id=None,
+    )
 
 
 def _classify(is_unsat: Callable[[int], bool], var: int) -> EntailmentStatus:

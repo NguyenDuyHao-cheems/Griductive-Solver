@@ -80,6 +80,11 @@ class GameEngine:
         return len(self._revealed_coords)
 
     @property
+    def initial_revealed_count(self) -> int:
+        """Number of initially face-up cards at puzzle start (public board info)."""
+        return len(self._puzzle.initial_revealed) if self._puzzle else 0
+
+    @property
     def unsolved_count(self) -> int:
         """Number of remaining face-down/unsolved cells."""
         return len(self._unsolved_coords)

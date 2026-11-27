@@ -20,6 +20,7 @@ from ui.board_view import (
     draw_board,
     draw_puzzle_picker_overlay,
     draw_revealed_clues_panel,
+    draw_trace_detail_overlay,
     draw_trace_panel,
 )
 from ui.button import Button
@@ -92,8 +93,13 @@ class GriductiveApp:
         self._top_buttons: list[Button] = []
         self._verdict_buttons: list[Button] = []
         self._clue_hitboxes: list[tuple[pygame.Rect, Clue]] = []
+        self._trace_hitboxes: list[tuple[pygame.Rect, int]] = []
         self._picker_hitboxes: list[tuple[pygame.Rect, Path]] = []
         self._picker_close_rect: pygame.Rect | None = None
+        self._trace_detail_close_rect: pygame.Rect | None = None
+        self._trace_detail_prev_rect: pygame.Rect | None = None
+        self._trace_detail_next_rect: pygame.Rect | None = None
+        self._trace_detail_modal_rect: pygame.Rect | None = None
 
         if init_display:
             self._init_pygame(screen_size)
@@ -196,6 +202,8 @@ class GriductiveApp:
         self.view.trace.clear()
         self.view.clue_scroll = 0
         self.view.trace_scroll = 0
+        self.view.selected_trace_index = None
+        self.view.trace_detail_scroll = 0
         self.view.auto_solving = False
         self._auto_solve_timer = 0.0
 
@@ -372,7 +380,8 @@ class GriductiveApp:
         self._sync_button_states()
 
     def _execute_auto_solve_step(self) -> None:
-        result = self.adapter.run_auto_solve_step(self.engine)
+        next_step = len(self.view.trace) + 1
+        result = self.adapter.run_auto_solve_step(self.engine, step_num=next_step)
         if result.status == "STEP" and result.step is not None:
             step = result.step
             self.view.trace.append(step)
@@ -408,6 +417,8 @@ class GriductiveApp:
 
     def open_puzzle_picker(self) -> None:
         self.view.auto_solving = False
+        self.view.selected_trace_index = None
+        self.view.trace_detail_scroll = 0
         self.refresh_puzzle_files()
         self.picker_error = ""
         self.view.puzzle_picker_open = True
@@ -417,6 +428,20 @@ class GriductiveApp:
         if self.engine.puzzle_id is not None:
             self.view.puzzle_picker_open = False
             self._sync_button_states()
+
+    def open_trace_step(self, index: int) -> None:
+        """Open the Trace Inspector overlay for ``self.view.trace[index]``."""
+        if not (0 <= index < len(self.view.trace)):
+            return
+        self.view.auto_solving = False
+        self.view.selected_trace_index = index
+        self.view.trace_detail_scroll = 0
+        self._sync_button_states()
+
+    def close_trace_detail(self) -> None:
+        self.view.selected_trace_index = None
+        self.view.trace_detail_scroll = 0
+        self._sync_button_states()
 
     # ------------------------------------------------------------------
     # Layout & Controls
@@ -547,6 +572,10 @@ class GriductiveApp:
                 self._handle_picker_event(event)
                 return
 
+            if self.view.selected_trace_index is not None:
+                self._handle_trace_detail_event(event)
+                return
+
             for btn in self._top_buttons:
                 if btn.handle_event(event):
                     return
@@ -571,6 +600,12 @@ class GriductiveApp:
                         self.toggle_clue_highlight(clue)
                         return
 
+                # Check deduction trace step clicks
+                for rect, trace_idx in self._trace_hitboxes:
+                    if rect.collidepoint(pos):
+                        self.open_trace_step(trace_idx)
+                        return
+
                 # Check board cell clicks
                 for coord, rect in self.layout.cell_rects.items():
                     if rect.collidepoint(pos):
@@ -582,12 +617,20 @@ class GriductiveApp:
 
     def _handle_key(self, key: int) -> None:
         if key == pygame.K_ESCAPE:
-            if self.view.puzzle_picker_open:
+            if self.view.selected_trace_index is not None:
+                self.close_trace_detail()
+            elif self.view.puzzle_picker_open:
                 self.close_puzzle_picker()
             else:
                 self.view.selected_clue_id = None
                 self.view.highlighted_coords = []
                 self.view.active_hint = None
+            return
+        if self.view.selected_trace_index is not None:
+            if key == pygame.K_LEFT and self.view.selected_trace_index > 0:
+                self.open_trace_step(self.view.selected_trace_index - 1)
+            elif key == pygame.K_RIGHT and self.view.selected_trace_index < len(self.view.trace) - 1:
+                self.open_trace_step(self.view.selected_trace_index + 1)
             return
         if self.view.puzzle_picker_open:
             return
@@ -613,6 +656,30 @@ class GriductiveApp:
                     self.load_puzzle_file(path)
                     return
 
+    def _handle_trace_detail_event(self, event: pygame.event.Event) -> None:
+        idx = self.view.selected_trace_index
+        if idx is None:
+            return
+        if event.type == pygame.MOUSEWHEEL:
+            self.view.trace_detail_scroll = max(0, self.view.trace_detail_scroll - event.y * 28)
+            return
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            pos = event.pos
+            if self._trace_detail_close_rect is not None and self._trace_detail_close_rect.collidepoint(pos):
+                self.close_trace_detail()
+                return
+            if self._trace_detail_prev_rect is not None and self._trace_detail_prev_rect.collidepoint(pos):
+                if idx > 0:
+                    self.open_trace_step(idx - 1)
+                return
+            if self._trace_detail_next_rect is not None and self._trace_detail_next_rect.collidepoint(pos):
+                if idx < len(self.view.trace) - 1:
+                    self.open_trace_step(idx + 1)
+                return
+            if self._trace_detail_modal_rect is not None and not self._trace_detail_modal_rect.collidepoint(pos):
+                self.close_trace_detail()
+                return
+
     def render(self, surface: pygame.Surface | None = None) -> None:
         target = surface if surface is not None else self.surface
         if target is None:
@@ -626,7 +693,9 @@ class GriductiveApp:
             draw_board(target, self.layout, pub, self.view, self.avatars)
             self._draw_action_panel(target, pub)
             self._clue_hitboxes = draw_revealed_clues_panel(target, self.layout.clues_panel, pub, self.view)
-            draw_trace_panel(target, self.layout.trace_panel, self.view, self.adapter.can_auto_solve)
+            self._trace_hitboxes = draw_trace_panel(
+                target, self.layout.trace_panel, self.view, self.adapter.can_auto_solve
+            )
         else:
             pygame.draw.rect(target, PANEL, self.layout.board_panel, border_radius=12)
             pygame.draw.rect(target, BORDER, self.layout.board_panel, width=1, border_radius=12)
@@ -639,6 +708,7 @@ class GriductiveApp:
                 anchor="center",
             )
             self._clue_hitboxes = []
+            self._trace_hitboxes = []
 
         if self.view.puzzle_picker_open:
             self._picker_hitboxes, self._picker_close_rect = draw_puzzle_picker_overlay(
@@ -650,6 +720,29 @@ class GriductiveApp:
         else:
             self._picker_hitboxes = []
             self._picker_close_rect = None
+
+        if (
+            not self.view.puzzle_picker_open
+            and self.view.selected_trace_index is not None
+            and 0 <= self.view.selected_trace_index < len(self.view.trace)
+        ):
+            (
+                self._trace_detail_close_rect,
+                self._trace_detail_prev_rect,
+                self._trace_detail_next_rect,
+                self._trace_detail_modal_rect,
+                self.view.trace_detail_scroll,
+            ) = draw_trace_detail_overlay(
+                target,
+                self.view.trace,
+                self.view.selected_trace_index,
+                self.view.trace_detail_scroll,
+            )
+        else:
+            self._trace_detail_close_rect = None
+            self._trace_detail_prev_rect = None
+            self._trace_detail_next_rect = None
+            self._trace_detail_modal_rect = None
 
     def _draw_top_bar(self, surface: pygame.Surface) -> None:
         bar = self.layout.top_bar

@@ -43,7 +43,8 @@ Giao diện trực quan viết bằng Pygame (`src/ui/`):
 - Bộ chọn câu đố (Puzzle Picker) hỗ trợ tải nhiều câu đố khác nhau và nút khởi động lại (Restart).
 - Thao tác chơi thủ công (chọn ô gán phán quyết CRIMINAL / INNOCENT) kèm hiệu ứng lật thẻ 3D mượt mà (`CardFlipAnimation`).
 - Nhấn chọn manh mối để tô sáng các ô tham chiếu trên bàn cờ.
-- Nút **Hint** chỉ dẫn ô và manh mối liên quan; nút **Auto Solve** tự động giải từng bước kết nối trực tiếp với DPLL Logic Agent và hiển thị bảng vết suy diễn (`Deduction Trace`).
+- Nút **Hint** chỉ dẫn ô và manh mối liên quan; nút **Auto Solve** tự động giải từng bước kết nối trực tiếp với DPLL Logic Agent và hiển thị bảng vết suy diễn (`Deduction Trace`, đánh số nhất quán từ `#1`).
+- Nhấn trực tiếp vào từng bước trong bảng **Deduction Trace** để mở hộp thoại **Trace Inspector** xem trọn vẹn `Active Clues`, toàn bộ danh sách `SAT Queries` (tô nổi truy vấn `UNSAT` phản chứng) và manh mối vừa tiết lộ.
 
 ## Cấu trúc thư mục dự án
 
@@ -62,6 +63,7 @@ Griductive-Solver/
 │   ├── encoder.py               # Bộ mã hóa CNF và kiểm tra hợp lệ manh mối
 │   ├── dpll.py                  # Bộ giải DPLL SAT Solver thuần Python và đo metrics
 │   ├── agent.py                 # Deductive Logic Agent, hint và uniqueness check
+│   ├── solve.py                 # CLI xuất vết suy diễn đầy đủ (trace/JSON) và kiểm tra tính duy nhất
 │   ├── ui/                      # Bộ điều khiển GUI Pygame, view bàn cờ và animations
 │   ├── assets/                  # Sprite nhân vật avatar cho giao diện
 │   ├── puzzles/                 # Bộ câu đố benchmark chuẩn JSON (3x3, 4x4, 5x5)
@@ -125,8 +127,17 @@ python src/main.py --puzzles-dir src/puzzles
 - `H`: Nhận gợi ý nước đi tiếp theo (Hint).
 - `C`: Gán phán quyết CRIMINAL cho ô đang chọn.
 - `I`: Gán phán quyết INNOCENT cho ô đang chọn.
-- `A` hoặc `Space`: Bật / Dừng chế độ tự động giải (Auto Solve).
-- `Esc`: Đóng bảng chọn câu đố hoặc hủy chọn ô.
+- `←` / `→`: Chuyển bước trước/sau khi mở hộp thoại xem chi tiết vết suy diễn (Trace Inspector).
+- `Esc`: Đóng hộp thoại Trace Inspector / bảng chọn câu đố, hoặc hủy tô sáng manh mối.
+
+### Xuất vết suy diễn đầy đủ và kiểm tra tính duy nhất (CLI — Mục 4.4)
+Chạy bộ giải không đoán (`LogicAgent.solve_puzzle()`) kèm kiểm tra tính duy nhất nghiệm riêng biệt (`check_uniqueness()`) và in đầy đủ từng bước suy diễn (`step`, `active_clue_ids`, toàn bộ `sat_queries`, phán quyết và manh mối mới được tiết lộ):
+```powershell
+python src/solve.py --puzzle src/puzzles/sample_3x3.json
+python src/solve.py --puzzle src/puzzles/sample_4x4.json --json trace_4x4.json
+python src/solve.py --all
+```
+Tùy chọn hỗ trợ: `--json <file>` (xuất toàn bộ trace và kết quả uniqueness ra JSON), `--time-limit-ms <ms>` (giới hạn mềm cho vòng suy diễn), `--skip-uniqueness` (bỏ qua bước kiểm tra tính duy nhất), `--quiet` (chỉ ghi JSON, không in ra terminal).
 
 ### Chạy bộ kiểm thử tự động
 Thực thi toàn bộ các ca kiểm thử đơn vị và tích hợp:
