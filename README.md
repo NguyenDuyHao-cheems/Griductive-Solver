@@ -152,6 +152,13 @@ python src/experiments/plot_results.py --input benchmark_results.csv --output as
 ```
 Lệnh trên sẽ tự động xuất tệp `assets/benchmark_summary.md` và 4 biểu đồ phân tích dạng PNG vào thư mục `assets/` bao phủ đầy đủ 6 nhóm chỉ số và giữ nguyên các trường hợp failure/timeout.
 
+### Thực nghiệm 3-SAT ngẫu nhiên (giới hạn của DPLL)
+Sinh 3-SAT ngẫu nhiên theo seed cố định, giải bằng `DPLLSolver` và xuất `random_3sat_results.csv`:
+```powershell
+python src/experiments/random_3sat.py --vars 150 --ratio 4.2 --seeds 0 1 2 3 4 --hard-timeout 600
+```
+Mỗi seed chạy trong tiến trình con riêng; seed vượt `--hard-timeout` (giây) được ghi là `TIMEOUT`.
+
 ## Phân công nhiệm vụ nhóm
 
 | Thành viên | Vai trò và trách nhiệm chính | Phần đóng góp trong báo cáo |

@@ -43,7 +43,12 @@ class SolverTimeout(RuntimeError):
     """Raised when a solve call exceeds its ``time_limit_ms``.
 
     ``partial`` carries the metrics collected before the limit was hit, so a
-    benchmark can still report the failed case instead of discarding it.
+    benchmark can still report the failed case instead of discarding it. Its
+    ``status`` is ``"TIMEOUT"``: an interrupted search proves neither SAT nor
+    UNSAT.
+
+    The limit is soft: the deadline is checked at the start of each recursive
+    DPLL call, not inside unit propagation, so a call may overrun it slightly.
     """
 
     def __init__(self, partial: SolverResult) -> None:
@@ -121,9 +126,12 @@ class DPLLSolver:
         """Decide satisfiability of the formula under the given assumptions.
 
         ``assumptions`` are signed literals (``+v`` = True, ``-v`` = False)
-        treated exactly like temporary unit clauses: they are assigned before
-        search and counted as propagations, so ``solve([l])`` reports the same
-        metrics as solving the formula with an extra unit clause ``[l]``.
+        assigned at level 0 before search and counted as propagations. Logically
+        ``solve([l])`` is the same as solving the formula with an extra unit
+        clause ``[l]``: same status, assignment, decisions and backtracks.
+        ``propagations`` may differ, because assumptions are enqueued before
+        the formula's own unit clauses, and when a branch hits a conflict the
+        number of literals assigned before it is detected depends on that order.
         """
         assumption_list = [_check_literal(lit) for lit in assumptions]
         if time_limit_ms is not None and time_limit_ms < 0:
@@ -327,7 +335,7 @@ class _Search:
         if self._deadline is not None and perf_counter() > self._deadline:
             raise SolverTimeout(
                 SolverResult(
-                    status="UNSAT",
+                    status="TIMEOUT",
                     assignment=None,
                     decisions=self._decisions,
                     propagations=self._propagations,
