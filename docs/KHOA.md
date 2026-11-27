@@ -44,7 +44,7 @@ Danh sách file GUI của Khoa:
 - `src/ui/clue_formatter.py`: liệt kê file puzzle không đọc nội dung, ánh xạ clue đã mở theo `PublicState`, định dạng text fallback cho 6 mẫu cốt lõi + 2 mẫu mở rộng (`PARITY`, `COMPARE_COUNT`) và tiện ích highlight qua `GameEngine`.
 - `src/ui/button.py`: nút Pygame dùng lại, mở rộng tùy chọn `fill_color`/`hover_color`/`text_color` tương thích ngược cho nút `CRIMINAL`/`INNOCENT`.
 - `src/ui/avatar_manager.py`, `src/ui/animations.py`, `src/ui/text.py`, `src/ui/theme.py`, `src/ui/__init__.py`: tiện ích đồ họa Pygame; `__init__.py` giữ gọn nhẹ không eager-import `pygame`.
-- `src/assets/sprites/avatars/`: 50 avatar PNG (ghi nguồn tại `src/assets/README.md`).
+- `src/assets/generate_avatars.py` & `src/assets/sprites/avatars/`: 50 avatar PNG gốc (256×256 RGBA) do Khoa tự sinh bằng Pillow, không dùng tài nguyên bên thứ ba chưa cấp phép (chi tiết tại `src/assets/README.md`).
 
 ### 2.2. Biểu Đồ Thực Nghiệm (`src/experiments/plot_results.py`)
 

@@ -16,7 +16,9 @@ from typing import Any, Literal
 Status = Literal["CRIMINAL", "INNOCENT"]
 EntailmentStatus = Literal["CRIMINAL", "INNOCENT", "UNKNOWN", "INCONSISTENT"]
 VerdictReason = Literal["ENTAILED", "NOT_PROVABLE", "CONTRADICTED", "INCONSISTENT"]
-SolverStatus = Literal["SAT", "UNSAT"]
+# "TIMEOUT" only appears on SolverTimeout.partial: the search was cut short,
+# so neither SAT nor UNSAT was proved.
+SolverStatus = Literal["SAT", "UNSAT", "TIMEOUT"]
 UniquenessStatus = Literal["UNIQUE", "MULTIPLE", "UNSAT"]
 
 RegionKind = Literal["ROW", "COL", "NEIGHBORS", "EXPLICIT"]

@@ -250,6 +250,38 @@ def test_assumption_equivalent_to_temporary_unit_clause() -> None:
         ) == (with_unit.decisions, with_unit.propagations, with_unit.backtracks)
 
 
+def test_assumption_and_unit_clause_may_differ_in_propagations() -> None:
+    # Assumptions are enqueued before the formula's unit clauses, so the
+    # conflict between [1] and [-1] is found after a different number of
+    # level-0 assignments. Satisfiability is unaffected.
+    with_assumption = solve([[1], [-1]], [2])
+    with_unit = solve([[1], [-1], [2]])
+    assert with_assumption.status == with_unit.status == "UNSAT"
+    assert (with_assumption.decisions, with_assumption.backtracks) == (0, 0)
+    assert (with_unit.decisions, with_unit.backtracks) == (0, 0)
+    assert (with_assumption.propagations, with_unit.propagations) == (2, 1)
+
+
+@pytest.mark.parametrize("path", sorted((SRC_DIR / "puzzles").glob("*.json")), ids=lambda p: p.stem)
+def test_assumption_matches_unit_clause_on_puzzle_kb0(path: Path) -> None:
+    """On every KB_0, only propagations may differ between the two forms."""
+    puzzle = Puzzle.from_dict(json.loads(path.read_text(encoding="utf-8")))
+    state = GameEngine(puzzle).get_public_state()
+    formula = encode_public_state(state)
+    solver = DPLLSolver(formula)
+    for coord in sorted(state.unsolved_coords):
+        var = formula.var_map[coord]
+        for literal in (var, -var):
+            with_assumption = solver.solve([literal])
+            with_unit = DPLLSolver([*formula.clauses, [literal]], num_vars=formula.total_vars).solve()
+            assert with_assumption.status == with_unit.status
+            assert with_assumption.assignment == with_unit.assignment
+            assert (with_assumption.decisions, with_assumption.backtracks) == (
+                with_unit.decisions,
+                with_unit.backtracks,
+            )
+
+
 def test_consecutive_queries_are_independent() -> None:
     clauses, num_vars = pigeonhole(3)
     clauses = clauses[1:]  # drop pigeon 0's clause -> SAT (pigeon 0 may sit nowhere)
@@ -343,6 +375,8 @@ def test_time_limit_raises_with_partial_metrics() -> None:
         solve(clauses, num_vars=num_vars, time_limit_ms=0.0)
     partial = info.value.partial
     assert isinstance(partial, SolverResult)
+    assert partial.status == "TIMEOUT"  # interrupted search is neither SAT nor UNSAT
+    assert partial.assignment is None
     assert_metrics_valid(partial)
 
 

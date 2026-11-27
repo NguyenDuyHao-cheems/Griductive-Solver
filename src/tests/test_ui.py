@@ -135,6 +135,15 @@ class TestAgentAdapterAndFormatters(unittest.TestCase):
         res = adapter.run_auto_solve_step(engine)
         self.assertEqual(res.status, "STEP")
         self.assertIsNotNone(res.step)
+        assert res.step is not None
+        self.assertEqual(res.step.step, 1)
+        self.assertTrue(all(q.startswith("KB_1 ^ ") for q in res.step.sat_queries))
+
+        res2 = adapter.run_auto_solve_step(engine)
+        self.assertEqual(res2.status, "STEP")
+        assert res2.step is not None
+        self.assertEqual(res2.step.step, 2)
+        self.assertTrue(all(q.startswith("KB_2 ^ ") for q in res2.step.sat_queries))
 
     def test_adapter_with_injected_mock_agent(self) -> None:
         step1 = DeductionStep(
@@ -362,6 +371,42 @@ class TestGriductiveAppHeadless(unittest.TestCase):
             self.assertEqual(app.engine.size, 5)
             self.assertEqual(len(app.layout.cell_rects), 25)
             app.render()
+
+    def test_real_autosolve_step_numbering_and_trace_detail_inspector(self) -> None:
+        from agent import LogicAgent
+        from ui.app import GriductiveApp
+
+        app = GriductiveApp(initial_puzzle=self.sample_3x3, auto_discover_agent=True)
+        # Execute all forced Auto Solve steps via the GUI controller
+        app.toggle_auto_solve()
+        while app.view.auto_solving:
+            app.view.flip_animations.clear()
+            app.update(1.0)
+
+        self.assertTrue(app.engine.is_solved())
+        expected = LogicAgent().solve_puzzle(GameEngine(self.sample_3x3, agent=LogicAgent()))
+        self.assertEqual([s.step for s in app.view.trace], list(range(1, len(expected.steps) + 1)))
+        self.assertEqual(
+            [s.sat_queries for s in app.view.trace],
+            [s.sat_queries for s in expected.steps],
+        )
+
+        # Render trace panel and open detail inspector overlay on step 1 -> step 2 -> close
+        app.render()
+        self.assertTrue(len(app._trace_hitboxes) > 0)
+        app.open_trace_step(0)
+        self.assertEqual(app.view.selected_trace_index, 0)
+        app.render()
+        self.assertIsNotNone(app._trace_detail_close_rect)
+        self.assertIsNotNone(app._trace_detail_next_rect)
+
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RIGHT}))
+        self.assertEqual(app.view.selected_trace_index, 1)
+        app.render()
+
+        app.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_ESCAPE}))
+        self.assertIsNone(app.view.selected_trace_index)
+        app.render()
 
 
 if __name__ == "__main__":

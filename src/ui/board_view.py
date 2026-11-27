@@ -69,6 +69,8 @@ class BoardViewState:
     status_kind: str = "info"
     clue_scroll: int = 0
     trace_scroll: int = 0
+    selected_trace_index: int | None = None
+    trace_detail_scroll: int = 0
     auto_solving: bool = False
     puzzle_picker_open: bool = False
 
@@ -513,13 +515,22 @@ def draw_trace_panel(
     panel_rect: pygame.Rect,
     view: BoardViewState,
     agent_ready: bool,
-) -> None:
-    """Draw scrollable DeductionStep trace panel."""
+) -> list[tuple[pygame.Rect, int]]:
+    """Draw scrollable DeductionStep trace panel and return clickable ``(rect, index)`` rows."""
     pygame.draw.rect(surface, PANEL, panel_rect, border_radius=12)
     pygame.draw.rect(surface, BORDER, panel_rect, width=1, border_radius=12)
 
     title = f"Deduction Trace ({len(view.trace)})"
     draw_text(surface, title, (panel_rect.left + 12, panel_rect.top + 10), size=15, color=TEXT, bold=True)
+    if view.trace:
+        draw_text(
+            surface,
+            "Click step for SAT queries",
+            (panel_rect.right - 12, panel_rect.top + 12),
+            size=11,
+            color=MUTED,
+            anchor="topright",
+        )
 
     list_area = pygame.Rect(
         panel_rect.left + 10,
@@ -535,8 +546,9 @@ def draw_trace_panel(
             else "LogicAgent not ready (src/agent.py pending)."
         )
         draw_wrapped(surface, msg, list_area, size=12, color=MUTED, line_gap=4)
-        return
+        return []
 
+    clickable: list[tuple[pygame.Rect, int]] = []
     item_h = 46
     gap = 6
     total_h = len(view.trace) * (item_h + gap)
@@ -547,11 +559,14 @@ def draw_trace_panel(
     surface.set_clip(list_area)
 
     y = list_area.top - view.trace_scroll
-    for step in view.trace:
+    for idx, step in enumerate(view.trace):
         item_rect = pygame.Rect(list_area.left, y, list_area.width, item_h)
         if item_rect.bottom >= list_area.top and item_rect.top <= list_area.bottom:
-            pygame.draw.rect(surface, PANEL_2, item_rect, border_radius=8)
-            pygame.draw.rect(surface, BORDER, item_rect, width=1, border_radius=8)
+            is_selected = view.selected_trace_index == idx
+            bg = (49, 60, 92) if is_selected else PANEL_2
+            border = ACCENT if is_selected else BORDER
+            pygame.draw.rect(surface, bg, item_rect, border_radius=8)
+            pygame.draw.rect(surface, border, item_rect, width=2 if is_selected else 1, border_radius=8)
 
             v_color = CRIMINAL if step.verdict == "CRIMINAL" else INNOCENT
             line1 = f"#{step.step}  {step.target_coord} -> {step.verdict}"
@@ -574,9 +589,168 @@ def draw_trace_panel(
                 size=11,
                 color=MUTED,
             )
+            clipped_hit = item_rect.clip(list_area)
+            if clipped_hit.height > 4:
+                clickable.append((clipped_hit, idx))
         y += item_h + gap
 
     surface.set_clip(prev_clip)
+    return clickable
+
+
+def draw_trace_detail_overlay(
+    surface: pygame.Surface,
+    trace: list[DeductionStep],
+    selected_index: int,
+    scroll: int,
+) -> tuple[pygame.Rect, pygame.Rect | None, pygame.Rect | None, pygame.Rect, int]:
+    """Draw modal overlay inspecting a single DeductionStep's active clues and SAT queries.
+
+    Returns ``(close_rect, prev_rect, next_rect, modal_rect, clamped_scroll)``.
+    """
+    width, height = surface.get_size()
+    dim = pygame.Surface((width, height), pygame.SRCALPHA)
+    dim.fill((9, 13, 22, 210))
+    surface.blit(dim, (0, 0))
+
+    modal_w = min(660, width - 60)
+    modal_h = min(580, height - 60)
+    modal = pygame.Rect((width - modal_w) // 2, (height - modal_h) // 2, modal_w, modal_h)
+
+    pygame.draw.rect(surface, PANEL, modal, border_radius=14)
+    pygame.draw.rect(surface, ACCENT, modal, width=2, border_radius=14)
+
+    step = trace[selected_index]
+    v_color = CRIMINAL if step.verdict == "CRIMINAL" else INNOCENT
+
+    # Top header & navigation buttons
+    close_rect = pygame.Rect(modal.right - 84, modal.top + 16, 66, 30)
+    next_rect: pygame.Rect | None = None
+    prev_rect: pygame.Rect | None = None
+
+    if len(trace) > 1:
+        next_rect = pygame.Rect(close_rect.left - 66, modal.top + 16, 58, 30)
+        prev_rect = pygame.Rect(next_rect.left - 66, modal.top + 16, 58, 30)
+
+        for rect, label, enabled in (
+            (prev_rect, "Prev", selected_index > 0),
+            (next_rect, "Next", selected_index < len(trace) - 1),
+        ):
+            pygame.draw.rect(surface, PANEL_2, rect, border_radius=8)
+            pygame.draw.rect(surface, BORDER if enabled else (46, 52, 68), rect, width=1, border_radius=8)
+            draw_text(
+                surface,
+                label,
+                rect.center,
+                size=12,
+                color=TEXT if enabled else (92, 100, 120),
+                bold=True,
+                anchor="center",
+            )
+
+    pygame.draw.rect(surface, PANEL_2, close_rect, border_radius=8)
+    pygame.draw.rect(surface, BORDER, close_rect, width=1, border_radius=8)
+    draw_text(surface, "Close", close_rect.center, size=12, color=TEXT, bold=True, anchor="center")
+
+    header_max_w = (prev_rect.left if prev_rect is not None else close_rect.left) - (modal.left + 28)
+    draw_text_fitted(
+        surface,
+        f"Deduction Step #{step.step}: {step.target_coord} -> {step.verdict}",
+        (modal.left + 20, modal.top + 16),
+        max(120, header_max_w),
+        size=18,
+        color=v_color,
+        bold=True,
+    )
+    reveal_str = step.newly_revealed_clue_id or "-"
+    draw_text_fitted(
+        surface,
+        f"Entry {selected_index + 1}/{len(trace)}  |  SAT calls: {step.sat_calls}  |  Newly revealed: {reveal_str}",
+        (modal.left + 20, modal.top + 44),
+        modal.width - 40,
+        size=12,
+        color=MUTED,
+    )
+
+    # Active clues box
+    clues_y = modal.top + 72
+    clues_box_h = 84
+    clues_box = pygame.Rect(modal.left + 20, clues_y, modal.width - 40, clues_box_h)
+    pygame.draw.rect(surface, PANEL_2, clues_box, border_radius=10)
+    pygame.draw.rect(surface, BORDER, clues_box, width=1, border_radius=10)
+    draw_text(
+        surface,
+        f"Active Clues ({len(step.active_clue_ids)})",
+        (clues_box.left + 12, clues_box.top + 8),
+        size=13,
+        color=ACCENT_2,
+        bold=True,
+    )
+    active_text = ", ".join(step.active_clue_ids) if step.active_clue_ids else "(none)"
+    draw_wrapped(
+        surface,
+        active_text,
+        pygame.Rect(clues_box.left + 12, clues_box.top + 28, clues_box.width - 24, clues_box.height - 34),
+        size=12,
+        color=TEXT,
+        line_gap=3,
+    )
+
+    # Scrollable SAT queries list
+    queries_top = clues_box.bottom + 14
+    draw_text(
+        surface,
+        f"SAT Queries ({len(step.sat_queries)}) — scroll if needed",
+        (modal.left + 20, queries_top),
+        size=13,
+        color=ACCENT,
+        bold=True,
+    )
+    queries_box = pygame.Rect(
+        modal.left + 20,
+        queries_top + 24,
+        modal.width - 40,
+        max(80, modal.bottom - (queries_top + 24) - 20),
+    )
+    pygame.draw.rect(surface, PANEL_2, queries_box, border_radius=10)
+    pygame.draw.rect(surface, BORDER, queries_box, width=1, border_radius=10)
+
+    row_h = 26
+    row_gap = 4
+    inner_area = queries_box.inflate(-16, -12)
+    total_h = len(step.sat_queries) * (row_h + row_gap)
+    max_scroll = max(0, total_h - inner_area.height)
+    clamped_scroll = max(0, min(scroll, max_scroll))
+
+    if not step.sat_queries:
+        draw_text(surface, "(no SAT queries recorded)", (inner_area.left, inner_area.top + 4), size=12, color=MUTED)
+        return close_rect, prev_rect, next_rect, modal, clamped_scroll
+
+    prev_clip = surface.get_clip()
+    surface.set_clip(inner_area)
+
+    y = inner_area.top - clamped_scroll
+    for q_idx, query in enumerate(step.sat_queries, start=1):
+        row_rect = pygame.Rect(inner_area.left, y, inner_area.width, row_h)
+        if row_rect.bottom >= inner_area.top and row_rect.top <= inner_area.bottom:
+            is_unsat = query.rstrip().endswith("UNSAT")
+            row_bg = (58, 46, 36) if is_unsat else (34, 41, 58)
+            row_border = WARNING if is_unsat else (50, 58, 78)
+            pygame.draw.rect(surface, row_bg, row_rect, border_radius=6)
+            pygame.draw.rect(surface, row_border, row_rect, width=1, border_radius=6)
+            draw_text_fitted(
+                surface,
+                f"{q_idx:02d}.  {query}",
+                (row_rect.left + 10, row_rect.top + 5),
+                row_rect.width - 20,
+                size=12,
+                color=WARNING if is_unsat else TEXT,
+                bold=is_unsat,
+            )
+        y += row_h + row_gap
+
+    surface.set_clip(prev_clip)
+    return close_rect, prev_rect, next_rect, modal, clamped_scroll
 
 
 def draw_puzzle_picker_overlay(
@@ -592,7 +766,7 @@ def draw_puzzle_picker_overlay(
     surface.blit(dim, (0, 0))
 
     modal_w = min(560, width - 60)
-    modal_h = min(520, height - 80)
+    modal_h = min(620, height - 60)
     modal = pygame.Rect((width - modal_w) // 2, (height - modal_h) // 2, modal_w, modal_h)
 
     pygame.draw.rect(surface, PANEL, modal, border_radius=14)
@@ -632,10 +806,13 @@ def draw_puzzle_picker_overlay(
         )
         return clickable, close_rect
 
-    row_h = 48
-    gap = 10
+    avail_list_h = max(60, (modal.bottom - 18) - y)
+    gap = 8
+    max_row_h = (avail_list_h - gap * max(0, len(puzzle_files) - 1)) // max(1, len(puzzle_files))
+    row_h = max(36, min(48, max_row_h))
+    compact_row = row_h < 44
     for path in puzzle_files:
-        if y + row_h > modal.bottom - 18:
+        if y + row_h > modal.bottom - 16:
             break
         row_rect = pygame.Rect(modal.left + 20, y, modal.width - 40, row_h)
         is_current = current_puzzle_path is not None and path.resolve() == current_puzzle_path.resolve()
@@ -645,18 +822,18 @@ def draw_puzzle_picker_overlay(
         draw_text_fitted(
             surface,
             path.stem,
-            (row_rect.left + 14, row_rect.top + 8),
+            (row_rect.left + 14, row_rect.top + (5 if compact_row else 7)),
             row_rect.width - 110,
-            size=16,
+            size=14 if compact_row else 16,
             color=WHITE,
             bold=True,
         )
         draw_text_fitted(
             surface,
             path.name,
-            (row_rect.left + 14, row_rect.top + 28),
+            (row_rect.left + 14, row_rect.top + (22 if compact_row else 27)),
             row_rect.width - 110,
-            size=12,
+            size=11 if compact_row else 12,
             color=MUTED,
         )
         tag = "LOADED" if is_current else "OPEN"
