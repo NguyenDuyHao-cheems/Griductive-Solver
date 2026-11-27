@@ -179,11 +179,11 @@ function UNIT_PROPAGATE():
 
 **Phát hiện xung đột (conflict detection).** Xung đột xảy ra khi một mệnh đề có toàn bộ literal sai, hoặc khi một literal cần gán ngược với giá trị đã có (ví dụ hai giả định $C_i$ và $\neg C_i$, hay hai mệnh đề đơn $(x)$ và $(\neg x)$). Khi đó nhánh hiện tại thất bại ngay. Nếu xung đột xảy ra ở mức 0 (trước mọi quyết định) thì công thức là UNSAT mà không cần phân nhánh.
 
-**Chọn biến tất định và phân nhánh đệ quy.** Biến phân nhánh là biến chưa gán có ID nhỏ nhất trong các biến xuất hiện ở công thức. Vì encoder đánh số biến chính $C_i$ từ $1$ đến $N^2$ theo thứ tự hàng rồi cột, bộ giải luôn phân nhánh trên các nhân vật trước các biến phụ. Mỗi biến được thử giá trị True trước rồi mới đến False. Bộ giải không dùng ngẫu nhiên hay thứ tự lặp của `set`, nên chạy lại nhiều lần cho kết quả, phép gán và metrics giống hệt nhau. Pure-literal elimination và heuristic nâng cao không được cài đặt vì đề bài để tùy chọn.
+**Chọn biến tất định và phân nhánh đệ quy.** Biến phân nhánh là biến chưa gán có ID nhỏ nhất trong các biến xuất hiện ở công thức. Vì encoder đánh số biến chính $C_i$ từ $1$ đến $N^2$ theo thứ tự hàng rồi cột, bộ giải luôn phân nhánh trên các nhân vật trước các biến phụ. Mỗi biến được thử giá trị True trước rồi mới đến False. Bộ giải không dùng yếu tố ngẫu nhiên và không phụ thuộc thứ tự duyệt của `set`. Vì vậy, với cùng công thức và cùng danh sách giả định, các lần giải hoàn tất cho cùng kết quả, cùng phép gán và cùng ba chỉ số `decisions`, `propagations`, `backtracks`. Riêng `runtime_ms` là thời gian đo thực tế nên dao động theo máy và tải hệ thống. Pure-literal elimination và heuristic nâng cao không được cài đặt vì đề bài để tùy chọn.
 
 **Quay lui (backtracking).** Trước mỗi quyết định, bộ giải lưu `mark = |trail|`. Nếu nhánh thất bại, mọi literal sau `mark` (gồm literal quyết định và các literal lan truyền theo nó) được trả về trạng thái chưa gán, `queue_head` được đặt lại bằng `mark`, rồi nhánh ngược lại được thử. Đây là quay lui theo thứ tự thời gian (chronological backtracking). Độ sâu đệ quy tối đa bằng số biến phân nhánh, nên bộ giải tạm nâng `sys.setrecursionlimit` khi KB lớn.
 
-**Giả định (assumptions) và tính độc lập giữa các truy vấn.** Để kiểm tra $KB_t \land \neg C_i$ và $KB_t \land C_i$, Logic Agent tạo một `DPLLSolver(KB_t)` rồi gọi `solve([-v])` và `solve([+v])`. Giả định được gán ở mức 0 giống hệt mệnh đề đơn tạm thời, nên `solve(F, [ℓ])` cho cùng kết quả và cùng metrics với việc giải $F \land (\ell)$. Mỗi lần gọi `solve` tạo trạng thái tìm kiếm mới (mảng giá trị, trail, bộ đếm), còn mệnh đề và danh sách xuất hiện chỉ được đọc. Nhờ vậy `CNFFormula` gốc không bị sửa và các truy vấn liên tiếp trên cùng $KB_t$ không rò rỉ trạng thái cho nhau. Ví dụ ở Mục 3.4 với $KB = (C_A \lor C_B) \land (\neg C_A \lor C_B)$: `solve([-B])` trả về UNSAT nên $KB \models C_B$, còn `solve([A])` và `solve([-A])` đều SAT nên A là UNKNOWN.
+**Giả định (assumptions) và tính độc lập giữa các truy vấn.** Để kiểm tra $KB_t \land \neg C_i$ và $KB_t \land C_i$, Logic Agent tạo một `DPLLSolver(KB_t)` rồi gọi `solve([-v])` và `solve([+v])`. Giả định được gán ở mức 0 và tương đương về logic với một mệnh đề đơn tạm thời: `solve(F, [ℓ])` cho cùng kết quả, cùng phép gán, cùng `decisions` và `backtracks` như giải $F \land (\ell)$. Riêng `propagations` có thể lệch. Giả định được gán trước các mệnh đề đơn gốc của $F$, và khi một nhánh gặp xung đột, số literal đã gán trước lúc phát hiện xung đột phụ thuộc vào thứ tự đó. Chẳng hạn, `solve([[1],[-1]], [2])` đếm 2 propagations, còn `solve([[1],[-1],[2]])` chỉ đếm 1; cả hai đều UNSAT. Trên $KB_0$ của 8 puzzle, 28 trong 214 truy vấn bị lệch theo cách này, và đều là truy vấn UNSAT. Mỗi lần gọi `solve` tạo trạng thái tìm kiếm mới (mảng giá trị, trail, bộ đếm), còn mệnh đề và danh sách xuất hiện chỉ được đọc. Nhờ vậy `CNFFormula` gốc không bị sửa và các truy vấn liên tiếp trên cùng $KB_t$ không rò rỉ trạng thái cho nhau. Ví dụ ở Mục 3.4 với $KB = (C_A \lor C_B) \land (\neg C_A \lor C_B)$: `solve([-B])` trả về UNSAT nên $KB \models C_B$, còn `solve([A])` và `solve([-A])` đều SAT nên A là UNKNOWN.
 
 **Cách đếm metrics.**
 
@@ -192,7 +192,7 @@ function UNIT_PROPAGATE():
 - `backtracks`: số lần một nhánh quyết định thất bại và bị hoàn tác.
 - `runtime_ms`: thời gian thực của một lần gọi `solve`, đo bằng `time.perf_counter()` và đổi sang mili giây.
 
-Các chỉ số luôn là số nguyên không âm và được tính riêng cho từng lần gọi, không cộng dồn. Ví dụ với $F = (\neg x_1 \lor x_2)(\neg x_1 \lor x_3)(\neg x_2 \lor \neg x_3)(x_1 \lor x_4)$:
+Ba chỉ số đếm là số nguyên không âm, còn `runtime_ms` là số thực không âm tính bằng mili giây. Mọi chỉ số được tính riêng cho từng lần gọi `solve`, không cộng dồn giữa các lần gọi. Ví dụ với $F = (\neg x_1 \lor x_2)(\neg x_1 \lor x_3)(\neg x_2 \lor \neg x_3)(x_1 \lor x_4)$:
 
 1. Quyết định $x_1=$ True lan truyền $x_2, x_3$ và gây xung đột ở $(\neg x_2 \lor \neg x_3)$, nên bộ giải quay lui.
 2. Quyết định $x_1=$ False lan truyền $x_4$.
@@ -200,18 +200,24 @@ Các chỉ số luôn là số nguyên không âm và được tính riêng cho 
 
 Kết quả là SAT với 3 decisions, 4 propagations và 1 backtrack.
 
-**Giới hạn thời gian.** Tham số tùy chọn `time_limit_ms` được kiểm tra ở mỗi lần gọi đệ quy. Khi vượt giới hạn, bộ giải ném `SolverTimeout` kèm `partial` (metrics đã thu được), để script thực nghiệm ghi nhận ca timeout thay vì loại bỏ nó (Mục 4.5).
+**Giới hạn thời gian.** Tham số tùy chọn `time_limit_ms` là một giới hạn mềm. Deadline chỉ được kiểm tra ở đầu mỗi lời gọi đệ quy `DPLL()`, không kiểm tra trong lúc lan truyền đơn vị, nên lời gọi có thể chạy quá ngân sách một đoạn trước khi dừng; độ vượt phụ thuộc vào lượng lan truyền ở nút đang xử lý. Khi phát hiện quá hạn, bộ giải ném `SolverTimeout` kèm `partial` chứa các chỉ số đã thu được. Trường `status` của `partial` được đặt là `TIMEOUT`: lượt tìm kiếm bị ngắt giữa chừng không chứng minh công thức là SAT hay UNSAT. Kết quả bán phần chỉ dùng để thống kê, giúp script thực nghiệm ghi nhận ca quá thời gian thay vì loại bỏ nó (Mục 5). Ở cấp Logic Agent, ngân sách tính cho cả lượt giải và mỗi truy vấn DPLL nhận phần thời gian còn lại; riêng bước Game Engine kiểm tra lại phán quyết trong `submit_verdict` không nhận ngân sách này, nên script thực nghiệm dùng thêm hard timeout ở cấp tiến trình con.
 
-**Kiểm thử.** `src/tests/test_dpll.py` có 241 test, kiểm tra các nhóm sau:
+**Kiểm thử.** `src/tests/test_dpll.py` có 250 test, kiểm tra các nhóm sau:
 
 - Các ca SAT, UNSAT, công thức rỗng, mệnh đề rỗng, chuỗi đơn vị, xung đột sớm, mệnh đề hằng đúng và bài toán chuồng bồ câu PHP(4,3).
 - So khớp với bộ liệt kê vét cạn (brute-force oracle) trên 200 công thức CNF ngẫu nhiên có seed cố định.
 - Tính tất định khi chạy lặp lại.
-- Tính độc lập của giả định và sự tương đương giữa giả định với mệnh đề đơn tạm thời.
-- Giá trị metrics chính xác và cơ chế timeout.
+- Tính độc lập của giả định, và sự tương đương giữa giả định với mệnh đề đơn tạm thời: cùng kết quả, phép gán, decisions và backtracks trên $KB_0$ của cả 8 puzzle; propagations được phép lệch.
+- Giá trị metrics chính xác và cơ chế timeout (`partial.status` là `TIMEOUT`).
 - Tích hợp với encoder và game engine trên `sample_3x3` và `sample_4x4`: nghiệm DPLL thỏa `evaluate_puzzle` (bộ đánh giá ngữ nghĩa độc lập với CNF), blocking clause cho UNSAT (nghiệm duy nhất), và mọi phán quyết bị buộc trên $KB_0$ khớp với lời giải ẩn.
 
-**Hạn chế.** DPLL cơ bản không học mệnh đề (no clause learning) và quay lui theo thứ tự thời gian, nên thời gian chạy tăng theo hàm mũ trên các công thức ngẫu nhiên khó. Ví dụ, với 3-SAT ngẫu nhiên 150 biến ở tỉ lệ mệnh đề/biến 4.2, bộ giải mất khoảng 145 giây. KB của Griductive có cấu trúc chặt và phần lớn được giải bằng lan truyền, nên giới hạn này ít ảnh hưởng ở kích thước 3×3–5×5. Số liệu thực tế sẽ được báo cáo ở Mục 5.
+**Hạn chế.** DPLL cơ bản không học mệnh đề (no clause learning) và quay lui theo thứ tự thời gian, nên trong trường hợp xấu nhất thời gian chạy tăng theo hàm mũ. Để đo mức ảnh hưởng, nhóm chạy `src/experiments/random_3sat.py` trên 3-SAT ngẫu nhiên 150 biến, 630 mệnh đề (tỉ lệ mệnh đề/biến 4,2, gần ngưỡng chuyển pha), với seed 0–4, trên Python 3.11, Windows 11 và CPU Intel Core thế hệ 12. Kết quả gồm 4 công thức SAT và 1 công thức UNSAT; thời gian giải từ 0,6 đến 98,3 giây, trung vị 48,8 giây. Công thức UNSAT chậm nhất, cần gần 5 triệu decisions, vì bộ giải phải duyệt hết cây tìm kiếm mới kết luận được. Mức chênh hơn 150 lần giữa các seed cho thấy thời gian trên công thức ngẫu nhiên khó phụ thuộc mạnh vào từng thể hiện. Dữ liệu được lưu tại `random_3sat_results.csv`. Ngược lại, KB của Griductive có cấu trúc chặt và phần lớn được giải bằng lan truyền, nên giới hạn này ít ảnh hưởng ở kích thước 3×3–5×5 (Mục 5).
+
+Tái lập:
+
+```bash
+python src/experiments/random_3sat.py --vars 150 --ratio 4.2 --seeds 0 1 2 3 4 --hard-timeout 600
+```
 
 4.2. Phân loại hệ quả logic (Entailment Classification)
 
@@ -322,7 +328,7 @@ Từ số liệu ở Bảng 5.1–5.2 và bốn biểu đồ trên, nhóm rút r
 
 **Hạn chế của hệ thống và hướng cải thiện.**
 
-1. **Giới hạn mở rộng của DPLL cơ bản (không có CDCL và heuristic chọn biến):** Như đã phân tích ở Mục 4.1, DPLL quay lui theo thứ tự thời gian chưa có học mệnh đề xung đột (CDCL), không có watched literals và chọn biến cố định theo ID nhỏ nhất. Với lưới 3×3–5×5 có cấu trúc ràng buộc cục bộ chặt, thời gian dưới 55 ms là rất nhanh; tuy nhiên, khi mở rộng lên lưới lớn hơn ($\ge 6 \times 6$) hoặc các câu đố ít ràng buộc đơn lẻ kết hợp dày đặc `PARITY`/`COMPARE_COUNT`, cây tìm kiếm có nguy cơ tăng theo hàm mũ và chạm ngưỡng timeout (tương tự thực nghiệm 3-SAT ngẫu nhiên 150 biến mất ~145 giây ở Mục 4.1).
+1. **Giới hạn mở rộng của DPLL cơ bản (không có CDCL và heuristic chọn biến):** Như đã phân tích ở Mục 4.1, DPLL quay lui theo thứ tự thời gian chưa có học mệnh đề xung đột (CDCL), không có watched literals và chọn biến cố định theo ID nhỏ nhất. Với lưới 3×3–5×5 có cấu trúc ràng buộc cục bộ chặt, thời gian dưới 55 ms là rất nhanh; tuy nhiên, khi mở rộng lên lưới lớn hơn ($\ge 6 \times 6$) hoặc các câu đố ít ràng buộc đơn lẻ kết hợp dày đặc `PARITY`/`COMPARE_COUNT`, cây tìm kiếm có nguy cơ tăng theo hàm mũ và chạm ngưỡng timeout (tương tự thực nghiệm 3-SAT ngẫu nhiên 150 biến ở Mục 4.1, nơi thời gian giải dao động từ 0,6 đến 98,3 giây tùy seed).
 2. **Mã hóa lại $KB_t$ ở mỗi bước (chưa incremental):** Mỗi khi một thẻ mới được lật, hệ thống gọi lại `encode_public_state()` và khởi tạo `DPLLSolver` mới từ đầu. Với lưới 5×5 gồm 22 bước và gần 800 mệnh đề, việc xây lại danh sách xuất hiện lặp đi lặp lại góp phần làm tăng chi phí mỗi truy vấn SAT. Cài đặt SAT solver dạng tăng dần (incremental clause addition) có thể giảm đáng kể chi phí này.
 3. **Chi phí biến phụ lớn với vùng rộng và manh mối mở rộng:** Mã hóa bộ đếm tuần tự và phép so sánh `COMPARE_COUNT` tạo số lượng biến phụ gấp ~8 lần biến chính ở lưới 5×5 (đặc biệt trên vùng `NEIGHBORS` 8 ô). Ngoài ra, `encode_public_state()` mã hóa độc lập từng manh mối nên chưa tái sử dụng chung các biến ngưỡng khi hai manh mối cùng tham chiếu một vùng.
 4. **Chiến lược quét row-major và độ tối ưu của `Hint`:** Quét cố định theo thứ tự hàng–cột đảm bảo tính tất định nhưng có thể phát sinh nhiều truy vấn `UNKNOWN` dư thừa khi các ô bị bắt buộc nằm gần cuối lưới (như `puzzle_4x4_02` cần 94 lần gọi SAT). Bên cạnh đó, hàm `hint()` rút gọn tham lam cho ra một tập manh mối tối thiểu theo nghĩa không lược bỏ thêm được (irreducible), phụ thuộc thứ tự lật thẻ, chưa đảm bảo là tập ít manh mối nhất toàn cục (minimum-cardinality MUS).
