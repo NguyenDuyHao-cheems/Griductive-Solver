@@ -25,9 +25,9 @@ Dự án được thực hiện bởi nhóm 5 sinh viên với toàn bộ quá t
 | :--- | :---: | :--- | :--- | :---: |
 | **Nguyễn Duy Hào** | 24120306 | Quản lý schema dùng chung, Game Engine, Direct Semantic Evaluator, tập dữ liệu puzzle (3x3, 4x4, 5x5), đóng gói dự án. | `src/models.py`, `src/game_engine.py`, `src/puzzles/*.json`, mục 1 và 2 báo cáo, `README.md`. | 100% |
 | **Bùi Đặng Khả Tuân** | 24120236 | Ánh xạ biến tất định, bộ kiểm tra tính hợp lệ của manh mối, bộ mã hóa CNF tự động (6 mẫu cốt lõi và 2 mở rộng). | `src/encoder.py`, `src/tests/test_encoder.py`, mục 3 báo cáo. | 100% |
-| **Đinh Sỹ Bảo** | 24120262 | Bộ giải DPLL SAT Solver thuần Python, hỗ trợ giả định, ghi nhận metrics, xây dựng kịch bản benchmark tự động. | `src/dpll.py`, `src/tests/test_dpll.py`, `src/experiments/run_experiments.py`, mục 4.1 báo cáo. | 100% |
+| **Đinh Sỹ Bảo** | 24120262 | Bộ giải DPLL SAT Solver thuần Python, hỗ trợ giả định, ghi nhận metrics, xây dựng kịch bản benchmark tự động. | `src/dpll.py`, `src/tests/test_dpll.py`, `src/experiments/run_experiments.py`, `src/experiments/random_3sat.py`, `benchmark_results.csv`, mục 4.1 báo cáo. | 100% |
 | **Nguyễn Đình Tuấn** | 24120237 | Tác tử suy diễn logic, phân loại hệ quả logic, kiểm tra nghiệm duy nhất, vòng lặp suy diễn không đoán, tạo vết suy diễn và gợi ý. | `src/agent.py`, `src/tests/test_agent.py`, mục 4.2 đến 4.4 báo cáo. | 100% |
-| **Nguyễn Minh Khoa** | 24120073 | Giao diện đồ họa người dùng, tương tác bàn cờ, trực quan hóa manh mối, tổng hợp biểu đồ thực nghiệm, ghi hình video demo. | `src/main.py`, `src/experiments/plot_results.py`, mục 5 báo cáo, video demo minh họa. | 100% |
+| **Nguyễn Minh Khoa** | 24120073 | Giao diện đồ họa người dùng, tương tác bàn cờ, trực quan hóa manh mối, tổng hợp biểu đồ thực nghiệm, ghi hình video demo. | `src/main.py`, `src/experiments/plot_results.py`, `src/ui/*`, `src/tests/test_ui.py`, `src/tests/test_plot_results.py`, biểu đồ và bảng tổng hợp trong `assets/`, mục 5 báo cáo (thực nghiệm), video demo minh họa, trích dẫn và phụ lục. | 100% |
 
 1.3. Kiến trúc hệ thống và Giao diện giữa các module
 
@@ -213,7 +213,9 @@ Mỗi ô trên lưới $N \times N$ có một biến chính, với giá trị `T
 
 3.2. Phương pháp mã hóa lực lượng (Cardinality Encoding)
 
-Với vùng gồm các biến $x_1,\ldots,x_m$, đặt $T_{i,j}$ là biến cho biết có ít nhất $j$ người `CRIMINAL` trong $i$ ô đầu. Khi xét thêm ô $i$, ta có $T_{i,j} \leftrightarrow T_{i-1,j} \lor (T_{i-1,j-1} \land x_i)$. Hai biên là $T_{i,0}=\mathrm{True}$ và $T_{i,j}=\mathrm{False}$ khi $j>i$.
+Với vùng gồm các biến $x_1,\ldots,x_m$, đặt $T_{i,j}$ là biến cho biết có ít nhất $j$ người `CRIMINAL` trong $i$ ô đầu. Cách biểu diễn này là một biến thể của bộ đếm tuần tự (sequential counter) của Sinz (2005). Khác với bản gốc chỉ mã hóa một chiều kéo theo, nhóm mã hóa *tương đương hai chiều*: `AT_LEAST` cần chiều $T\Rightarrow$ đếm, `AT_MOST` cần chiều đếm $\Rightarrow T$, còn `EXACTLY` và `COMPARE_COUNT` cần cả hai. Nhờ đó mọi mẫu dùng chung một bảng ngưỡng, và mỗi phép gán biến chính xác định duy nhất giá trị các biến phụ.
+
+Gọi $\ell$ là ngưỡng lớn nhất cần mã hóa, với $1\le\ell\le m$: $\ell=k$ với `AT_LEAST`, $\ell=k+1$ với `AT_MOST` và `EXACTLY` (chỉ cần khi $k<m$), và $\ell=m$ với `COMPARE_COUNT`. Khi xét thêm ô $i$ ($2\le i\le m$, $1\le j\le\min(i,\ell)$), ta có $T_{i,j} \leftrightarrow T_{i-1,j} \lor (T_{i-1,j-1} \land x_i)$. Các biên là $T_{1,1}=x_1$ (không cần biến phụ), $T_{i,0}=\mathrm{True}$ và $T_{i,j}=\mathrm{False}$ khi $j>i$.
 
 `AT_LEAST(k)` đặt $T_{m,k}$ thành đúng, `AT_MOST(k)` đặt $T_{m,k+1}$ thành sai, còn `EXACTLY(k)` áp dụng cả hai cận. Cận đếm yêu cầu cả vùng cùng đúng hoặc cùng sai được mã hóa bằng các mệnh đề đơn. Nếu cần đến mức $\ell$, số mệnh đề cho bảng ngưỡng là $O(m\ell)$.
 
@@ -223,9 +225,9 @@ Với `SAME(A1, B1)`, gọi $a$ và $b$ là hai biến tương ứng. Điều ki
 
 3.4. Suy dẫn manh mối đếm (Counting Clue Derivation)
 
-Xét `EXACTLY(2)` trên ba ô có biến $a,b,c$. Đặt $p\leftrightarrow(a\lor b)$ và $q\leftrightarrow(a\land b)$ cho hai ngưỡng trong hai ô đầu. Khi thêm $c$, ngưỡng ít nhất hai là $t\leftrightarrow(q\lor(p\land c))$, còn ngưỡng ít nhất ba là $u\leftrightarrow(q\land c)$.
+Xét `EXACTLY(2)` trên ba ô có biến $a,b,c$. Đặt $p\leftrightarrow(a\lor b)$ và $q\leftrightarrow(a\land b)$ cho hai ngưỡng trong hai ô đầu. Khi thêm $c$, ngưỡng ít nhất hai là $t\leftrightarrow(q\lor(p\land c))$, còn ngưỡng ít nhất ba là $u\leftrightarrow(q\land c)$. Bộ mã hóa cũng sinh $r\leftrightarrow(p\lor c)$ (có ít nhất một tội phạm trong cả vùng), vì mọi ngưỡng từ 1 đến $\ell$ đều được tạo ở mỗi tầng; biến này không xuất hiện trong mệnh đề đơn nào nên không ràng buộc thêm.
 
-Chiều $q\lor(p\land c)\Rightarrow t$ sinh hai mệnh đề $(\neg q\lor t)$ và $(\neg p\lor\neg c\lor t)$. Chiều ngược lại sinh $(\neg t\lor q\lor p)$ và $(\neg t\lor q\lor c)$. Mã hóa tương đương cho $p,q,u$ rồi thêm hai mệnh đề đơn $(t)$ và $(\neg u)$ để buộc đúng hai ô.
+Chiều $q\lor(p\land c)\Rightarrow t$ sinh hai mệnh đề $(\neg q\lor t)$ và $(\neg p\lor\neg c\lor t)$. Chiều ngược lại sinh $(\neg t\lor q\lor p)$ và $(\neg t\lor q\lor c)$. Mã hóa tương đương cho $p,q,r,u$ rồi thêm hai mệnh đề đơn $(t)$ và $(\neg u)$ để buộc đúng hai ô. Tổng cộng, manh mối này sinh 5 biến phụ và 18 mệnh đề (16 mệnh đề định nghĩa ngưỡng và 2 mệnh đề đơn), khớp với kết quả của `encode_clues()`.
 
 3.5. Mã hóa các phần mở rộng (Extensions Encoding)
 

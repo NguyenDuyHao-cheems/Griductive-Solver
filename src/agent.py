@@ -177,11 +177,18 @@ class LogicAgent:
         public_state: PublicState,
         *,
         step_num: int = 1,
+        kb_index: int | None = None,
     ) -> DeductionStep | str:
         """Perform a single forced deduction step on ``public_state`` without guessing.
 
-        Uses the same single-step deduction core and 1-based ``step_num`` /
-        ``KB_{step_num - 1}`` labeling as :meth:`solve_puzzle`.
+        Uses the same single-step deduction core and labeling as
+        :meth:`solve_puzzle`: 1-based ``step_num``, and step ``s`` queries
+        ``KB_{s-1}`` (``KB_0`` is the initial knowledge base).
+
+        ``kb_index`` overrides the ``t`` in the ``KB_t`` query labels when the
+        caller's step numbering does not count every accepted verdict, e.g.
+        the GUI numbers Auto Solve steps from 1 even after manual verdicts.
+        It is the number of verdicts accepted since the puzzle started.
 
         Returns:
             - ``DeductionStep`` if a cell's verdict is logically forced.
@@ -191,8 +198,10 @@ class LogicAgent:
         """
         if step_num < 1:
             raise ValueError(f"step_num must be >= 1, got {step_num}.")
+        if kb_index is not None and kb_index < 0:
+            raise ValueError(f"kb_index must be >= 0, got {kb_index}.")
 
-        status, step_obj = _deduce_one_step(public_state, step_num=step_num)
+        status, step_obj = _deduce_one_step(public_state, step_num=step_num, kb_index=kb_index)
         if step_obj is None:
             return status
         return step_obj
@@ -227,24 +236,28 @@ def _deduce_one_step(
     state: PublicState,
     *,
     step_num: int,
+    kb_index: int | None = None,
     on_result: Callable[[SolverResult], None] | None = None,
     deadline: float | None = None,
 ) -> tuple[Literal["SOLVED", "UNKNOWN", "INCONSISTENT", "CRIMINAL", "INNOCENT"], DeductionStep | None]:
     """Run one deterministic no-guess deduction scan on ``state``.
 
     Shared by both :meth:`LogicAgent.solve_puzzle` and :meth:`LogicAgent.deduce_step`
-    so step numbers and ``KB_{step_num - 1}`` SAT query labels are always identical.
+    so step numbers and SAT query labels are always identical. Step ``s``
+    (1-based) queries ``KB_{s-1}``: ``KB_0`` is the initial knowledge base.
+    ``kb_index``, when given, sets the ``t`` of ``KB_t`` explicitly.
     """
     if not state.unsolved_coords:
         return "SOLVED", None
 
+    kb = step_num - 1 if kb_index is None else kb_index
     queries: list[str] = []
 
     def record(coord: str, literal: int, result: SolverResult) -> None:
         if on_result is not None:
             on_result(result)
         sign = "~" if literal < 0 else ""
-        queries.append(f"KB_{step_num - 1} ^ {sign}C_{coord}: {result.status}")
+        queries.append(f"KB_{kb} ^ {sign}C_{coord}: {result.status}")
 
     status, coord = _first_forced(state, record, deadline)
     if status not in ("CRIMINAL", "INNOCENT"):
