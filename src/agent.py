@@ -181,7 +181,7 @@ class LogicAgent:
         """Perform a single forced deduction step on ``public_state`` without guessing.
 
         Uses the same single-step deduction core and 1-based ``step_num`` /
-        ``KB_{step_num}`` labeling as :meth:`solve_puzzle`.
+        ``KB_{step_num - 1}`` labeling as :meth:`solve_puzzle`.
 
         Returns:
             - ``DeductionStep`` if a cell's verdict is logically forced.
@@ -233,7 +233,7 @@ def _deduce_one_step(
     """Run one deterministic no-guess deduction scan on ``state``.
 
     Shared by both :meth:`LogicAgent.solve_puzzle` and :meth:`LogicAgent.deduce_step`
-    so step numbers and ``KB_{step_num}`` SAT query labels are always identical.
+    so step numbers and ``KB_{step_num - 1}`` SAT query labels are always identical.
     """
     if not state.unsolved_coords:
         return "SOLVED", None
@@ -244,7 +244,7 @@ def _deduce_one_step(
         if on_result is not None:
             on_result(result)
         sign = "~" if literal < 0 else ""
-        queries.append(f"KB_{step_num} ^ {sign}C_{coord}: {result.status}")
+        queries.append(f"KB_{step_num - 1} ^ {sign}C_{coord}: {result.status}")
 
     status, coord = _first_forced(state, record, deadline)
     if status not in ("CRIMINAL", "INNOCENT"):
