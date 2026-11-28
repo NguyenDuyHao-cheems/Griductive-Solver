@@ -275,7 +275,7 @@ def test_trace_replays_row_major_forced_choices(path):
         assert step.active_clue_ids == [c.clue_id for c in state.revealed_clues]
         assert (step.target_coord, step.verdict) == first_forced(agent.classify_all(state))
         assert step.sat_calls == len(step.sat_queries) and step.sat_calls % 2 == 0
-        prefix = f"KB_{step.step} ^ "
+        prefix = f"KB_{step.step - 1} ^ "
         assert all(q.startswith(prefix) for q in step.sat_queries)
         # The last pair of queries proves the chosen verdict by refutation.
         refuted = "~" if step.verdict == "CRIMINAL" else ""
@@ -420,7 +420,7 @@ def test_deduce_step_defaults_to_step_1_and_validates_step_num():
     first = agent.deduce_step(engine.get_public_state())
     assert not isinstance(first, str)
     assert first.step == 1
-    assert all(q.startswith("KB_1 ^ ") for q in first.sat_queries)
+    assert all(q.startswith("KB_0 ^ ") for q in first.sat_queries)
 
     with pytest.raises(ValueError, match="step_num"):
         agent.deduce_step(engine.get_public_state(), step_num=0)

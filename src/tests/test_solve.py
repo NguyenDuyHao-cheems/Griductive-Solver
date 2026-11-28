@@ -53,7 +53,7 @@ def test_format_result_text_includes_all_required_trace_fields() -> None:
     assert "Uniqueness check (full clue set): UNIQUE" in rendered
     assert "Step 1: A2 -> CRIMINAL" in rendered
     assert "Active clues (2): clue_A1, clue_B2" in rendered
-    assert "KB_1 ^ ~C_A2: UNSAT" in rendered
+    assert "KB_0 ^ ~C_A2: UNSAT" in rendered
     assert "Newly revealed clue: clue_A2" in rendered
 
 
@@ -64,7 +64,7 @@ def test_cli_single_puzzle_stdout_and_json_export(tmp_path: Path, capsys: pytest
 
     stdout = capsys.readouterr().out
     assert "Uniqueness check (full clue set): UNIQUE" in stdout
-    assert "KB_1 ^ ~C_A2: UNSAT" in stdout
+    assert "KB_0 ^ ~C_A2: UNSAT" in stdout
     assert out_json.is_file()
 
     payload = json.loads(out_json.read_text(encoding="utf-8"))
@@ -74,7 +74,7 @@ def test_cli_single_puzzle_stdout_and_json_export(tmp_path: Path, capsys: pytest
     assert len(payload["trace"]) == 7
     assert payload["trace"][0]["step"] == 1
     assert payload["trace"][0]["active_clue_ids"] == ["clue_A1", "clue_B2"]
-    assert "KB_1 ^ ~C_A2: UNSAT" in payload["trace"][0]["sat_queries"]
+    assert "KB_0 ^ ~C_A2: UNSAT" in payload["trace"][0]["sat_queries"]
 
 
 def test_cli_all_puzzles_quiet_json_and_skip_uniqueness(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

@@ -137,13 +137,13 @@ class TestAgentAdapterAndFormatters(unittest.TestCase):
         self.assertIsNotNone(res.step)
         assert res.step is not None
         self.assertEqual(res.step.step, 1)
-        self.assertTrue(all(q.startswith("KB_1 ^ ") for q in res.step.sat_queries))
+        self.assertTrue(all(q.startswith("KB_0 ^ ") for q in res.step.sat_queries))
 
         res2 = adapter.run_auto_solve_step(engine)
         self.assertEqual(res2.status, "STEP")
         assert res2.step is not None
         self.assertEqual(res2.step.step, 2)
-        self.assertTrue(all(q.startswith("KB_2 ^ ") for q in res2.step.sat_queries))
+        self.assertTrue(all(q.startswith("KB_1 ^ ") for q in res2.step.sat_queries))
 
     def test_adapter_with_injected_mock_agent(self) -> None:
         step1 = DeductionStep(
