@@ -1,7 +1,5 @@
 # Griductive Solver — Mã nguồn (Source)
 
-Thư mục này chứa toàn bộ mã nguồn, dữ liệu câu đố (puzzles), bộ kiểm thử và tài nguyên giao diện đồ họa của dự án.
-
 ## Cấu trúc các module
 
 - `main.py`: Điểm khởi chạy giao diện đồ họa desktop Pygame.
@@ -19,7 +17,7 @@ Thư mục này chứa toàn bộ mã nguồn, dữ liệu câu đố (puzzles),
 
 ## Cài đặt môi trường và thư viện
 
-Yêu cầu Python 3.11 trở lên (ưu tiên bản 3.12). Khởi tạo môi trường ảo và cài đặt các thư viện phụ thuộc ngay tại thư mục này (`Source/` hoặc `src/`):
+Yêu cầu Python 3.11 trở lên (ưu tiên bản 3.12). Khởi tạo môi trường ảo và cài đặt các thư viện phụ thuộc ngay tại thư mục này:
 
 ```bash
 python -m venv .venv
@@ -29,17 +27,16 @@ pip install -r requirements.txt
 
 ## Khởi chạy giao diện đồ họa (GUI)
 
-Đứng tại thư mục này (`Source/` hoặc `src/`):
-
+Đứng tại thư mục này:
 ```bash
 python main.py
 ```
 
-Có thể truyền thêm `--puzzle puzzles/sample_3x3.json` để mở trực tiếp một câu đố mẫu khi khởi động (hoặc chạy `python src/main.py --puzzle src/puzzles/sample_3x3.json` nếu đứng từ thư mục gốc của repository). Sau khi chạy `Auto Solve`, nhấn trực tiếp vào từng bước trong bảng **Deduction Trace** để xem chi tiết `Active Clues` và toàn bộ danh sách `SAT Queries`.
+Sau khi chạy `Auto Solve`, nhấn trực tiếp vào từng bước trong bảng **Deduction Trace** để xem chi tiết `Active Clues` và toàn bộ danh sách `SAT Queries`.
 
 ## Xuất vết suy diễn đầy đủ và kiểm tra tính duy nhất (CLI)
 
-Đứng tại thư mục này (`Source/` hoặc `src/`):
+Đứng tại thư mục này:
 
 ```bash
 python solve.py --puzzle puzzles/sample_3x3.json
@@ -51,13 +48,13 @@ Lệnh trên chạy vòng lặp suy diễn không đoán trên `PublicState` và
 
 ## Chạy thực nghiệm Benchmark
 
-Đứng tại thư mục này (`Source/` hoặc `src/`):
+Đứng tại thư mục này:
 
 ```bash
 python experiments/run_experiments.py
 ```
 
-Lệnh trên mặc định xuất tệp `benchmark_results.csv` (gồm đủ 6 nhóm chỉ số theo Mục 4.5, mỗi câu đố một dòng, giữ nguyên các trường hợp failure/timeout) tại thư mục gốc của repository (có thể chỉ định đường dẫn khác bằng `--output <path>`). Chạy kèm `--help` để xem các tùy chọn giới hạn thời gian mềm/cứng và số lần lặp lại.
+Lệnh trên mặc định xuất tệp `benchmark_results.csv` (gồm đủ 6 nhóm chỉ số theo Mục 4.5, mỗi câu đố một dòng, giữ nguyên các trường hợp failure/timeout) tại thư mục gốc của repository (có thể chỉ định đường dẫn khác bằng `--output <path>`). Chạy kèm `--help` để xem các tùy chọn giới hạn thời gian và số lần lặp lại.
 
 ## Vẽ biểu đồ kết quả thực nghiệm
 
