@@ -109,8 +109,8 @@ Kết quả mẫu trên `sample_3x3.json`:
 ```
 Hint: A2 = CRIMINAL, relevant_clue_ids = ['clue_B2']
 step=1, active=[clue_A1, clue_B2], sat_calls=6
-  KB_1 ^ ~C_B1: SAT, KB_1 ^ C_B1: SAT, KB_1 ^ ~C_C1: SAT, KB_1 ^ C_C1: SAT,
-  KB_1 ^ ~C_A2: UNSAT, KB_1 ^ C_A2: SAT   → A2 = CRIMINAL, lật clue_A2
+  KB_0 ^ ~C_B1: SAT, KB_0 ^ C_B1: SAT, KB_0 ^ ~C_C1: SAT, KB_0 ^ C_C1: SAT,
+  KB_0 ^ ~C_A2: UNSAT, KB_0 ^ C_A2: SAT   → A2 = CRIMINAL, lật clue_A2
 ...
 SOLVED: 7 bước, 38 lần gọi SAT
 ```

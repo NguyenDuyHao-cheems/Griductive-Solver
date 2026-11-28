@@ -145,6 +145,20 @@ class TestAgentAdapterAndFormatters(unittest.TestCase):
         self.assertEqual(res2.step.step, 2)
         self.assertTrue(all(q.startswith("KB_1 ^ ") for q in res2.step.sat_queries))
 
+    def test_auto_solve_after_manual_verdict_labels_real_kb_index(self) -> None:
+        # GUI trace numbering restarts at #1 for Auto Solve, but the KB index
+        # must count the manual verdict already accepted (KB_1, not KB_0).
+        adapter = AgentAdapter(auto_discover=True)
+        engine = GameEngine(self.sample_3x3)
+        adapter.attach_to_engine(engine)
+        self.assertTrue(engine.submit_verdict("A2", "CRIMINAL").accepted)
+
+        res = adapter.run_auto_solve_step(engine, step_num=1)
+        self.assertEqual(res.status, "STEP")
+        assert res.step is not None
+        self.assertEqual(res.step.step, 1)
+        self.assertTrue(all(q.startswith("KB_1 ^ ") for q in res.step.sat_queries))
+
     def test_adapter_with_injected_mock_agent(self) -> None:
         step1 = DeductionStep(
             step=1,

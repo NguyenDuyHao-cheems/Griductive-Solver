@@ -121,9 +121,14 @@ class AgentAdapter:
             if step_num is not None
             else max(1, engine.revealed_count - engine.initial_revealed_count + 1)
         )
+        # KB_t index = verdicts accepted so far (manual and automatic), which
+        # differs from the GUI trace number once the user has played by hand.
+        kb_index = max(0, engine.revealed_count - engine.initial_revealed_count)
         public_state = engine.get_public_state()
         try:
-            raw_result = self._invoke_step_callable(step_fn, public_state, step_num=resolved_step)
+            raw_result = self._invoke_step_callable(
+                step_fn, public_state, step_num=resolved_step, kb_index=kb_index
+            )
         except Exception as exc:
             return AutoSolveStepResult(status="ERROR", message=f"Loi khi chay Auto Solve: {exc}")
 
@@ -217,16 +222,21 @@ class AgentAdapter:
         public_state: PublicState,
         *,
         step_num: int | None = None,
+        kb_index: int | None = None,
     ) -> Any:
-        """Invoke the Agent using the public knowledge state only."""
-        if step_num is not None:
-            try:
-                params = inspect.signature(step_fn).parameters
-                accepts_step_num = "step_num" in params or any(
-                    param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()
-                )
-            except (TypeError, ValueError):
-                accepts_step_num = False
-            if accepts_step_num:
-                return step_fn(public_state, step_num=step_num)
-        return step_fn(public_state)
+        """Invoke the Agent using the public knowledge state only.
+
+        Optional keyword arguments are passed only if the agent accepts them.
+        """
+        try:
+            params = inspect.signature(step_fn).parameters
+            has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+            accepted = {name for name in ("step_num", "kb_index") if name in params or has_var_kw}
+        except (TypeError, ValueError):
+            accepted = set()
+        kwargs = {
+            name: value
+            for name, value in (("step_num", step_num), ("kb_index", kb_index))
+            if value is not None and name in accepted
+        }
+        return step_fn(public_state, **kwargs)

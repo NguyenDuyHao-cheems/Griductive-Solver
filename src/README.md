@@ -34,6 +34,14 @@ python main.py
 
 Sau khi chạy `Auto Solve`, nhấn trực tiếp vào từng bước trong bảng **Deduction Trace** để xem chi tiết `Active Clues` và toàn bộ danh sách `SAT Queries`.
 
+Phím tắt trên giao diện:
+- `L`: Mở bảng chọn câu đố (Load).
+- `R`: Khởi động lại bàn chơi hiện tại (Restart).
+- `H`: Nhận gợi ý nước đi tiếp theo (Hint).
+- `C` / `I`: Gán phán quyết CRIMINAL / INNOCENT cho ô đang chọn.
+- `←` / `→`: Chuyển bước trước/sau trong hộp thoại Trace Inspector.
+- `Esc`: Đóng hộp thoại hoặc bảng chọn câu đố, hoặc hủy tô sáng manh mối.
+
 ## Xuất vết suy diễn đầy đủ và kiểm tra tính duy nhất (CLI)
 
 Đứng tại thư mục này:
@@ -54,13 +62,19 @@ Lệnh trên chạy vòng lặp suy diễn không đoán trên `PublicState` và
 python experiments/run_experiments.py
 ```
 
-Lệnh trên mặc định xuất tệp `benchmark_results.csv` (gồm đủ 6 nhóm chỉ số theo Mục 4.5, mỗi câu đố một dòng, giữ nguyên các trường hợp failure/timeout) tại thư mục gốc của repository (có thể chỉ định đường dẫn khác bằng `--output <path>`). Chạy kèm `--help` để xem các tùy chọn giới hạn thời gian và số lần lặp lại.
+Lệnh trên mặc định xuất tệp `benchmark_results.csv` (gồm đủ 6 nhóm chỉ số theo Mục 4.5, mỗi câu đố một dòng, giữ nguyên các trường hợp failure/timeout) tại thư mục cha của thư mục này (gốc repository, tức `Source/` trong bài nộp; có thể chỉ định đường dẫn khác bằng `--output <path>`). Chạy kèm `--help` để xem các tùy chọn giới hạn thời gian và số lần lặp lại.
+
+Thực nghiệm 3-SAT ngẫu nhiên (giới hạn của DPLL), xuất `random_3sat_results.csv` cũng tại thư mục cha:
+
+```bash
+python experiments/random_3sat.py --vars 150 --ratio 4.2 --seeds 0 1 2 3 4 --hard-timeout 600
+```
 
 ## Vẽ biểu đồ kết quả thực nghiệm
 
-Sau khi đã có tệp `benchmark_results.csv`:
+Sau khi đã có tệp `benchmark_results.csv` (nằm ở thư mục cha):
 
 ```bash
-python experiments/plot_results.py --input benchmark_results.csv --output assets
+python experiments/plot_results.py --input ../benchmark_results.csv --output ../assets
 ```
 

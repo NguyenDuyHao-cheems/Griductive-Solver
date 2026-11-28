@@ -34,7 +34,8 @@ Metric definitions (all measured on the same puzzle set):
   every clue of the puzzle (the formula used by the uniqueness check).
 - ``sat_calls``, ``decisions``, ``propagations``, ``backtracks``, ``runtime_ms``
   come from the agent's ``SolveReport`` (agent queries only; the GameEngine's
-  re-verification inside ``submit_verdict`` is not counted, see docs/DTUAN.md).
+  re-verification inside ``submit_verdict`` is not counted in the SAT metrics,
+  but its time is included in ``runtime_ms``).
 - ``deduction_steps``: accepted forced verdicts (one per step, row-major).
 - ``reveal_waves``: number of rounds when the board is played wave by wave:
   classify every unsolved cell on KB_t, submit *all* forced verdicts together,

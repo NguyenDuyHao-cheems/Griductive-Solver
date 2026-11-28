@@ -49,10 +49,11 @@ Giao diện trực quan viết bằng Pygame (`src/ui/`):
 ## Cấu trúc thư mục dự án
 
 ```
-Griductive-Solver/
-├── docs/
+Griductive-Solver/                # Thư mục Source/ trong bài nộp
+├── docs/                        # (chỉ có trong repository, không kèm trong bài nộp)
 │   ├── ARCHITECTURE.md          # Tài liệu thiết kế kiến trúc và luồng dữ liệu
 │   ├── HAO.md                   # Nhật ký công việc và quyết định thiết kế của Hào
+│   ├── BAO.md                   # Nhật ký công việc của Bảo (DPLL & Benchmark)
 │   ├── DTUAN.md                 # Nhật ký công việc của Tuấn (Logic Agent)
 │   ├── KHOA.md                  # Nhật ký công việc của Khoa (GUI & Biểu đồ)
 │   └── Project2-Griductive-Solver.md # Đặc tả yêu cầu đồ án chi tiết
@@ -70,8 +71,10 @@ Griductive-Solver/
 │   ├── experiments/             # Kịch bản thực nghiệm benchmark và vẽ biểu đồ
 │   └── tests/                   # Toàn bộ kiểm thử tự động pytest
 ├── assets/                      # Biểu đồ và tệp tóm tắt Markdown từ thực nghiệm
+├── benchmark_results.csv        # Số liệu benchmark 6 nhóm chỉ số (Mục 4.5)
+├── random_3sat_results.csv      # Số liệu thực nghiệm 3-SAT ngẫu nhiên
 ├── requirements.txt             # Danh sách thư viện phụ thuộc
-├── REPORT.md                    # Báo cáo kỹ thuật của đồ án
+├── REPORT.md                    # Bản nháp Markdown của báo cáo (chỉ có trong repository; bản nộp là Report.pdf)
 └── README.md                    # Tài liệu hướng dẫn sử dụng dự án
 ```
 
@@ -109,8 +112,10 @@ Các thư viện chính bao gồm:
 
 ## Hướng dẫn sử dụng và khởi chạy
 
+> Mọi lệnh dưới đây chạy từ thư mục gốc của repository, tức thư mục `Source/` khi giải nén bài nộp.
+
 ### Khởi chạy giao diện Pygame Desktop GUI
-Khởi động giao diện trò chơi từ thư mục gốc của repository:
+Khởi động giao diện trò chơi:
 ```powershell
 python src/main.py
 ```
